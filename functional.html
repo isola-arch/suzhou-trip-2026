@@ -213,9 +213,10 @@
 <h2 id="s09"><span class="n">09</span>交通明细</h2>
 <div class="cols" id="legs"></div>
 
-<h2 id="s10"><span class="n">10</span>天气 · 日期依据<span class="hint">Open-Meteo · 出发前 2–3 天复核</span></h2>
+<h2 id="s10"><span class="n">10</span>天气 · 日期依据<span class="hint">Open-Meteo · 出发前 2–3 天复核 · 含 11/15 方案弃选分析</span></h2>
 <table id="wx"></table>
 <div class="note">绿行 = 选中窗口。11/17–18 冷锋过境（杭州最低 2.6°C），过境后 19–22 全晴回暖。想要「烟雨江南」：真雨只在 17–18（已为冷锋避开）；窗口内靠<b>晨雾版</b>——11/21 预报晨雾，乌镇清晨（住景区内 6:30–9:00 空景+河面雾）+九溪烟树（秋季晨雾常态）是 11 月江南的正确打开方式。</div>
+<table id="altwin"></table>
 
 <h2 id="s11"><span class="n">11</span>预算 · 每人</h2>
 <table id="budget"></table>
@@ -313,6 +314,17 @@ try{
     var cls=d[3]===1?"sel":(d[3]===-1?"dim":"");
     var mark=d[3]===1?'<span class="pickmark">✓ 出行</span>':(d[3]===-1?'<span class="tag urg">避</span>':"");
     return '<tr class="'+cls+'"><td class="num">'+d[0]+'</td><td>'+d[1]+'</td><td>'+d[2]+'</td><td>'+mark+'</td></tr>';
+  }).join("");
+}catch(e){}
+try{
+  var ALT=[["维度","11/15–18（六→二）","11/19–22（四→日）✓"],
+   ["天气","前好后差：15–16 多云尚可，<b>17–18 冷锋+毛毛雨 4–15°C</b>","过境后全晴回暖"],
+   ["园林","头牌只能排六日 = 周末人流峰值","拙政园/苏博落周四五 = 工作日"],
+   ["苏博","<b>周一闭馆</b>——4 天只有日/二在苏州，苏博只能挤周日","周四五任选"],
+   ["乌镇","周一二入住：房价砍半、人少、雨夜氛围反而对 ✅","周六最贵最挤（唯一劣势）"],
+   ["结论","可行但差一档——最差两天落在行程核心，最好两天在回程飞机上","<b>保留</b> · 除非 11/15 有硬约束（请假/价差大）"]];
+  el("altwin").innerHTML='<tr><th style="width:12%"></th><th>弃选窗口</th><th>选中窗口</th></tr>'+ALT.slice(1).map(function(r){
+    return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>';
   }).join("");
 }catch(e){}
 
