@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>苏州·乌镇 4 日 — 11/19–22 · 香港出发</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { margin:0; box-sizing:border-box; }
+  body { background:#0f0f10; color:#e8e6e1; font:14px/1.65 -apple-system,"Segoe UI","Microsoft JhengHei",sans-serif; }
+  .wrap { max-width:520px; margin:0 auto; padding:16px 14px 40px; }
+  h2.sect { font-size:13px; letter-spacing:.12em; color:#9a978f; text-transform:uppercase; margin:26px 0 10px;
+            display:flex; align-items:center; gap:8px; }
+  h2.sect::after { content:""; flex:1; height:1px; background:#2a2a26; }
+
+  header h1 { font-size:20px; line-height:1.35; }
+  header .sub { color:#9a978f; font-size:12px; margin:6px 0 10px; }
+  .badge { display:inline-block; font-size:10px; padding:1px 7px; border-radius:8px; margin:0 4px 4px 0; }
+  .b-hi   { background:#2a3d2a; color:#6fbf73; }
+  .b-md   { background:#33322a; color:#e8b44f; }
+  .b-est  { background:#3d2f1e; color:#e8b44f; }
+  .b-must { background:#3d2a2a; color:#e8764f; }
+  .b-opt  { background:#2a2f3d; color:#8fa7d9; }
+  .b-fix  { background:#2a3d3d; color:#7fc4c4; }
+
+  .tldr { background:#1c1b18; border:1px solid #3a3528; border-radius:10px; padding:10px 14px;
+          font-size:12.5px; color:#d8cfc0; margin-bottom:14px; }
+  .tldr b { color:#e8764f; }
+
+  /* route ribbon */
+  .route { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
+  .route .rstep { font-size:11px; color:#9a978f; background:#191a1c; border:1px solid #333;
+                  border-radius:8px; padding:4px 9px; cursor:pointer; transition:.15s; }
+  .route .rstep:hover, .route .rstep.on { border-color:#e8764f; color:#e8764f; }
+  .route .rstep .rn { color:#e8764f; font-weight:700; margin-right:4px; }
+
+  /* map */
+  #mapwrap { position:relative; }
+  #map { height:330px; border-radius:10px; border:1px solid #333; margin-bottom:4px; z-index:0; }
+  .map-fallback { display:none; padding:30px 12px; text-align:center; color:#9a978f; font-size:12px;
+                  background:#191a1c; border:1px solid #333; border-radius:10px; margin-bottom:4px; }
+  #mapwrap .scrim { position:absolute; inset:0; z-index:400; display:none; align-items:center; justify-content:center;
+    background:rgba(10,10,11,.35); color:#e8e6e1; font-size:12px; border-radius:10px; cursor:pointer;
+    backdrop-filter:blur(1px); transition:opacity .2s; }
+  @media (pointer:coarse){ #mapwrap:not(.active) .scrim{ display:flex; } }
+  .leaflet-container { background:#1a1c1e; font:inherit; }
+  .leaflet-control-attribution { background:rgba(15,15,16,.75)!important; font-size:9px!important; }
+  .leaflet-control-attribution a { color:#6a6862!important; }
+  .num-pin { background:#e8764f; color:#fff; border:2px solid #fff; border-radius:50%;
+             width:26px!important; height:26px!important; font:700 12px/22px sans-serif;
+             text-align:center; box-shadow:0 1px 6px rgba(0,0,0,.6); }
+  .num-pin.hub { background:#8fa7d9; }
+  .num-pin.opt { background:#8a8a8a; }
+  .leaflet-popup-content-wrapper { background:#191a1c; color:#e8e6e1; border-radius:8px; }
+  .leaflet-popup-content { font:12px/1.5 inherit; margin:8px 10px; }
+  .leaflet-popup-content b { color:#e8764f; }
+  .leaflet-popup-tip { background:#191a1c; }
+  .attrib { font-size:9.5px; color:#6a6862; margin-bottom:14px; }
+
+  /* weather table */
+  table.wx { width:100%; border-collapse:collapse; font-size:11.5px; }
+  table.wx th { color:#9a978f; font-weight:400; text-align:left; padding:4px 6px; border-bottom:1px solid #2a2a26; }
+  table.wx td { padding:5px 6px; border-bottom:1px solid #1f1f1c; }
+  tr.pick td { background:#1c2418; }
+  tr.pick td:first-child { border-left:2px solid #6fbf73; }
+  tr.bad td { color:#7a766e; }
+  .wxnote { font-size:11.5px; color:#9a978f; margin-top:6px; }
+  .wxnote b { color:#6fbf73; }
+
+  /* day cards */
+  .day { border:1px solid #2e2c26; border-radius:10px; margin-bottom:12px; overflow:hidden; }
+  .day summary { padding:10px 12px; cursor:pointer; list-style:none; background:#1c1b18;
+                 font-size:13px; font-weight:600; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .day summary::-webkit-details-marker { display:none; }
+  .day summary .dtag { color:#e8764f; font-size:11px; letter-spacing:.08em; }
+  .day summary .dwx { font-size:11px; color:#7fc4c4; font-weight:400; }
+  .day summary .dmeta { color:#9a978f; font-weight:400; font-size:11.5px; margin-left:auto; }
+  .day .dbody { padding:8px 12px 12px; font-size:12.5px; }
+  .stop { padding:7px 0; border-bottom:1px dashed #2a2a26; display:flex; gap:8px; scroll-margin-top:12px; }
+  .stop:last-child { border:none; }
+  .stop .sn { color:#e8764f; font-weight:700; min-width:18px; cursor:pointer; }
+  .stop .sbody { flex:1; }
+  .stop .sname { font-weight:600; font-size:13px; }
+  .stop .smeta { color:#9a978f; font-size:11.5px; margin-top:1px; }
+  .stop .snote { color:#d8b48f; font-size:11.5px; margin-top:3px; }
+  .stop .swarn { color:#c98f8f; font-size:11.5px; margin-top:3px; }
+  .day .dnote { font-size:11px; color:#6a6862; margin-top:8px; font-style:italic; }
+  .stop.flash { animation:flashb 1.6s ease; }
+  @keyframes flashb { 0%{background:rgba(232,118,79,.18);} 100%{background:transparent;} }
+
+  /* legs — transport options */
+  .leg { background:#191a1c; border:1px solid #333; border-radius:10px; padding:10px 12px; margin-bottom:10px; }
+  .leg .ltitle { font-size:13px; font-weight:600; margin-bottom:2px; }
+  .leg .lmeta { font-size:11px; color:#9a978f; margin-bottom:8px; }
+  .opt { border-top:1px dashed #2a2a26; padding:7px 0; font-size:12px; }
+  .opt:first-of-type { border-top:none; }
+  .opt .orow { display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
+  .opt .oname { font-weight:600; }
+  .opt .ocost { margin-left:auto; color:#d8b48f; font-size:11.5px; white-space:nowrap; }
+  .opt .odesc { color:#9a978f; font-size:11.5px; margin-top:2px; }
+  .opt.rec { }
+  .opt.rec .oname { color:#6fbf73; }
+  .verdict { font-size:11.5px; color:#d8b48f; border-left:3px solid #4a3f28; padding-left:8px; margin-top:8px; }
+
+  /* stays */
+  .stay { background:#191a1c; border:1px solid #333; border-radius:10px; padding:10px 12px; margin-bottom:10px; }
+  .stay .stitle { font-size:13px; font-weight:600; }
+  .stay .swhy { font-size:11.5px; color:#9a978f; margin:2px 0 8px; }
+  .tier { display:flex; gap:8px; font-size:12px; padding:5px 0; border-top:1px dashed #2a2a26; }
+  .tier .tp { color:#d8b48f; min-width:88px; white-space:nowrap; }
+  .tier .td { flex:1; color:#c9c6bf; }
+  .tier .td small { color:#9a978f; display:block; font-size:11px; }
+
+  /* prep checklist */
+  .prep { background:#191a1c; border:1px solid #333; border-radius:10px; padding:6px 12px 10px; }
+  .task { display:flex; gap:10px; padding:8px 0; border-bottom:1px dashed #2a2a26; font-size:12.5px; align-items:flex-start; }
+  .task:last-child { border:none; }
+  .task input { margin-top:4px; accent-color:#e8764f; }
+  .task .tt { flex:1; }
+  .task .twhy { color:#9a978f; font-size:11px; margin-top:1px; }
+  .task.done .tt { opacity:.45; text-decoration:line-through; }
+  .task .urg { font-size:9.5px; padding:0 6px; border-radius:6px; border:1px solid #5a3a3a; color:#e8764f; white-space:nowrap; margin-top:2px; }
+  .task .urg.mid { border-color:#4a4030; color:#e8b44f; }
+
+  /* budget */
+  table.budget { width:100%; border-collapse:collapse; font-size:12px; }
+  table.budget td { padding:6px 8px; border-bottom:1px solid #1f1f1c; }
+  table.budget td:last-child { text-align:right; color:#d8b48f; white-space:nowrap; }
+  table.budget tr.total td { border-top:1px solid #3a3a34; border-bottom:none; font-weight:700; color:#e8e6e1; }
+  table.budget tr.total td:last-child { color:#e8764f; }
+
+  .honesty { font-size:11px; color:#6a6862; border-top:1px solid #2a2a26; margin-top:22px; padding-top:12px; }
+  .honesty b { color:#9a978f; }
+  .honesty li { margin:3px 0 3px 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>苏州 · 乌镇 · （杭州顺路）4 日</h1>
+  <div class="sub">2026-11-19（四）→ 11-22（日）· 2 人 · 香港出发 · 开口行程不走回头路</div>
+  <div>
+    <span class="badge b-hi">天气最佳窗口</span>
+    <span class="badge b-must">必去：拙政园·苏博·虎丘·寒山寺·乌镇</span>
+    <span class="badge b-opt">杭州 = 顺路可选</span>
+  </div>
+</header>
+
+<div class="tldr">
+  <b>策略一句话：</b>11/17–18 有冷锋大雨，19 号放晴但最冷（4–12°C）→ 把最冷的一天交给赶路；20–22 晴暖（最高 19–21°C）全留给户外。飞<b>虹桥</b>落地就是高铁站，乌镇睡一晚看夜景，杭州只做 22 号下午的顺路彩蛋。<br>
+  <b>待定项：</b>去程——11/19 飞（Day 1 半天）vs 11/18 晚飞（Day 1 玩满，多一晚酒店）；回程已锁定 11/22 晚班机。
+</div>
+
+<!-- route ribbon -->
+<div class="route" id="route"></div>
+
+<!-- map -->
+<h2 class="sect">地图 · 点标记跳到对应卡片</h2>
+<div id="mapwrap">
+  <div id="map"></div>
+  <div class="map-fallback" id="mapfb">地图加载需要联网——离线时直接看下方分日行程即可</div>
+  <div class="scrim" id="mapscrim">点按启用地图</div>
+</div>
+<div class="attrib">© OpenStreetMap contributors · 蓝点=交通枢纽 · 灰点=可选</div>
+
+<!-- weather -->
+<h2 class="sect">为什么选 11/19–22（Open-Meteo 预报）</h2>
+<table class="wx" id="wxtable"></table>
+<div class="wxnote">⚠ 8–11 天预报，冷空气可能漂移 1–2 天——出发前 2–3 天复核。杭州 11/19 晨最低 2.6°C 是全程最冷时刻。</div>
+
+<!-- days -->
+<h2 class="sect">分日行程（分段 > 时刻表：只有火车/飞机标死时间）</h2>
+<div id="days"></div>
+
+<!-- legs -->
+<h2 class="sect">大交通 · 比价与决策</h2>
+<div id="legs"></div>
+
+<!-- stays -->
+<h2 class="sect">住宿 · 区域决策</h2>
+<div id="stays"></div>
+
+<!-- prep -->
+<h2 class="sect">行前清单（按紧急度排序）</h2>
+<div class="prep" id="prep"></div>
+
+<!-- budget -->
+<h2 class="sect">预算粗估（每人）</h2>
+<div class="stay"><table class="budget" id="budget"></table></div>
+
+<!-- honesty -->
+<div class="honesty">
+  <b>可信度说明</b>
+  <ul>
+    <li><b>已查证：</b>天气预报（Open-Meteo API）、苏州↔乌镇直达班车、乌镇官方票价、沪港动卧时刻、杭州→香港航班时刻、苏博需预约</li>
+    <li><b>估算：</b>机票价格区间（11/11 查到的即期价，实际以订票为准）、酒店价格带（携程/Agoda 公开区间）</li>
+    <li><b>待确认：</b>乌镇→萧山机场直达大巴当日班次——保底走法：桐乡站→杭州东→地铁 19 号线直达机场（约 1.5–2h，很稳）</li>
+    <li><b>数据源：</b>Open-Meteo · 携程/去哪儿时刻表 · 乌镇官网 · 美团/Agoda · 国泰官网 · 12306 公开票价</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+/* ---------- safe storage (file:// localStorage can throw) ---------- */
+var store = {
+  get: function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set: function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+/* ---------- data ---------- */
+var PLACES = {
+  zhuozheng: {n:"拙政园", ll:[31.3256,120.6276], pin:1},
+  subo:      {n:"苏州博物馆", ll:[31.3225,120.6286], pin:2},
+  pingjiang: {n:"平江路", ll:[31.3165,120.6300], pin:3},
+  guanqian:  {n:"观前街（住宿区）", ll:[31.3090,120.6260], pin:4},
+  huqiu:     {n:"虎丘", ll:[31.3369,120.5780], pin:5},
+  hanshan:   {n:"寒山寺·枫桥", ll:[31.3087,120.5689], pin:6},
+  shantang:  {n:"七里山塘", ll:[31.3230,120.5830], pin:7},
+  szhou:     {n:"苏州站/北广场汽车站", ll:[31.3304,120.6114], pin:8, hub:true},
+  wuzhen:    {n:"乌镇·西栅", ll:[30.7450,120.4900], pin:9},
+  xihu:      {n:"西湖·断桥（可选）", ll:[30.2580,120.1510], pin:10, opt:true},
+  hzdong:    {n:"杭州东站", ll:[30.2917,120.2197], pin:11, hub:true},
+  liuyuan:   {n:"留园（可选）", ll:[31.3168,120.5870], pin:12, opt:true},
+  xiyuan:    {n:"西园寺（可选·素面）", ll:[31.3155,120.5840], pin:13, opt:true},
+  shizilin:  {n:"狮子林（可选）", ll:[31.3223,120.6330], pin:14, opt:true},
+  canglang:  {n:"沧浪亭（可选）", ll:[31.3048,120.6278], pin:15, opt:true},
+  wangshi:   {n:"网师园（可选）", ll:[31.3018,120.6325], pin:16, opt:true},
+  yipu:      {n:"艺圃（可选·隐藏款）", ll:[31.3150,120.6120], pin:17, opt:true},
+  yiyuan:    {n:"怡园（可选·酒店旁）", ll:[31.3108,120.6275], pin:18, opt:true}
+};
+
+var ROUTE = [
+  {t:"香港 HKG", to:null},
+  {t:"✈ 虹桥 SHA", to:null},
+  {t:"🚄 苏州", to:"guanqian"},
+  {t:"🚌 乌镇", to:"wuzhen"},
+  {t:"🚄 杭州", to:"hzdong"},
+  {t:"✈ 香港 HKG", to:null}
+];
+
+var WEATHER = [
+  ["11/14 六","🌧 93% · 26mm","🌧 84%",""],
+  ["11/15 日","阴→多云 19°C","阴 20°C",""],
+  ["11/16 一","多云 19°C","多云 19°C",""],
+  ["11/17 二","🌧 76% · 15mm","🌧 83% · 19mm","bad"],
+  ["11/18 三","冷锋 14/4°C 毛毛雨","15/5°C 毛毛雨","bad"],
+  ["11/19 四","☀ 干冷转晴 12/4°C","13/3°C","pick"],
+  ["11/20 五","☀ 晴 16/6°C","☀ 晴 18/5°C","pick"],
+  ["11/21 六","多云 19/8°C","20/5°C（晨雾）","pick"],
+  ["11/22 日","多云 19/9°C","☀ 晴 21/8°C","pick"]
+];
+
+var DAYS = [
+  { tag:"DAY 1 · 11/19 四", title:"赶路日 → 苏州", wx:"冷 4–12°C 晴", meta:"飞+高铁",
+    stops:[
+      {k:null, name:"香港 → 上海虹桥（选 15:00 前落地）", meta:"✈ ~2h10m 直飞 · 死时间", note:"虹桥机场与火车站同栋，落地直接上高铁，不用进上海市区",
+       badges:["b-fix"]},
+      {k:"szhou", name:"虹桥 → 苏州站", meta:"🚄 G 字 ~30–40min · ¥35–40 · 班次密集", note:"苏州站就在古城区北边，离观前街两站地铁", badges:["b-fix"]},
+      {k:"guanqian", name:"入住观前街/平江路一带", meta:"🏨 ¥250–450/间", note:"步行可到拙政园/苏博/平江路，第一次来苏州的最优基地", badges:["b-hi"]},
+      {k:"yiyuan", name:"怡园（机动可选）", meta:"¥15 · 观前街步行 5min · 40min", note:"离酒店最近的园子——到得早就顺手收掉，碎片时间填空", badges:["b-opt"]},
+      {k:"pingjiang", name:"平江路夜游 + 晚饭", meta:"免费 · 傍晚", note:"哑巴生煎、苏式汤面；沿河石板路，第一天轻量收尾", badges:[]}
+    ],
+    note:"最冷的一天拿来赶路——到酒店后只剩平江路散步这种轻活动。→ 若改 11/18 晚出发，本日升级为整天：拙政园+苏博提前到 Day 1，虎丘+寒山寺+山塘 Day 2 不变，行程整体前移、Day 4 乌镇/杭州更松。"},
+  { tag:"DAY 2 · 11/20 五", title:"苏州核心：园林+博物+虎丘", wx:"晴 6–16°C", meta:"全程最好的一天给重头戏",
+    stops:[
+      {k:"zhuozheng", name:"拙政园（顶门进）", meta:"¥70 · 07:30 开园 · 2.5h", note:"四大名园之首；顶门进人最少。分时票在「君到苏州」/携程提前买 7:30–9:30 时段", badges:["b-must","b-fix"]},
+      {k:"subo", name:"苏州博物馆", meta:"免费 · 需预约 · 2h", warn:"公众号提前 7 天放号（约 11/13–14 开抢 11/20）——全程最容易漏的一步", note:"贝聿铭封山之作，与拙政园一墙之隔，顺路无缝衔接", badges:["b-must","b-fix"]},
+      {k:"shizilin", name:"狮子林（可选加点）", meta:"¥30 · 苏博隔壁 2min · 1h", note:"元代寺观园林，假山迷宫钻进去会迷路——乾隆六下江南去了六次；贝聿铭的童年乐园", badges:["b-opt"]},
+      {k:"huqiu", name:"虎丘", meta:"¥60 · 下午 · 2h", note:"吴中第一名胜：云岩寺塔（中国比萨斜塔）+ 剑池。公交/打车 ~30min 从古城过去", badges:["b-must"]},
+      {k:"shantang", name:"七里山塘 → 夜景晚饭", meta:"街免费 · 摇橹船 ~¥50", note:"从虎丘坐船顺山塘河下来最经典；傍晚亮灯后比白天好看", badges:["b-hi"]}
+    ],
+    note:"加点位：想加留园 ¥55 → 虎丘下来顺路、山塘西口隔壁，园旁西园寺 ¥5 素面直接解决午餐；嫌满就砍游船或把虎丘挪到 Day3 上午。"},
+  { tag:"DAY 3 · 11/21 六", title:"寒山寺 → 乌镇西栅夜景", wx:"晴 8–19°C", meta:"下午转场",
+    stops:[
+      {k:"hanshan", name:"寒山寺 + 枫桥", meta:"¥20 · 上午 · 1–1.5h", note:"「姑苏城外寒山寺」打卡点，体量小、紧凑，半天内能收尾", badges:["b-must"]},
+      {k:"szhou", name:"苏州北广场汽车站 → 乌镇西栅", meta:"🚌 景区直通车 1.5h · ¥35–55 · 13:30/14:30 班次", note:"汽车站就在苏州站北广场，直达西栅游客中心，不用转车", badges:["b-fix"]},
+      {k:"wuzhen", name:"西栅 黄昏→亮灯→夜景", meta:"¥150 · 开放至 22:00", note:"乌镇精华在夜景：黄昏进场沿河走，亮灯后摇橹船夜游。景区内餐饮偏贵，门口吃完再进更省", badges:["b-must"]},
+      {k:null, name:"住西栅门口民宿", meta:"🏨 景区外 ¥250–400 / 景区内 ¥600–1500", note:"景区内住宿含早茶客+两日联票+行李托运，体验好但周六最贵；预算优先就住景区外步行 5 分钟的客栈", badges:["b-md"]}
+    ],
+    note:"上午可加留园：寒山寺 8:00–9:30 → 留园 10:00–11:30 顺路回城再赶 13:30 车。东栅（¥110）看体力：住景区内联票 ¥190 两日更划算。沧浪亭/网师园本版塞不下——要城南线选满日版 Day 1 下午。"},
+  { tag:"DAY 4 · 11/22 日", title:"乌镇晨 → 杭州顺路 → 回港", wx:"晴 9–19°C 全程最好天气", meta:"晚班机",
+    stops:[
+      {k:"wuzhen", name:"西栅清晨（住景区内限定福利）", meta:"7–9 点人最少", note:"不住景区内也可睡饱；清晨是乌镇最好拍照的时段", badges:["b-opt"]},
+      {k:"hzdong", name:"乌镇 → 杭州", meta:"大巴 1.5h ¥35 / 桐乡站→杭州东 G 字 20min ¥17–30", note:"方案 A：乌镇汽车站直达杭州客运中心；方案 B：打车 40min 到桐乡站换高铁，更快", badges:["b-fix"]},
+      {k:"xihu", name:"杭州 3 选 1 快闪", meta:"湖滨→断桥免费 / 灵隐寺 ¥75 / 九溪烟树免费", note:"A 西湖快闪最稳 · B 灵隐寺+飞来峰文化浓度最高 · C 九溪烟树 11 月中下旬红枫溪谷正当时，本地人私藏。没时间直接上 19 号线去机场", badges:["b-opt"]},
+      {k:null, name:"萧山机场 → 香港", meta:"✈ ~2.5h · 选 17:00–19:35 起飞", note:"国泰 CX961 15:55→18:35 / 国航 CA727 14:45→17:20 / 最晚 ~19:35→22:20。彩蛋：G899 动卧杭州东 21:15→西九龙 07:25", badges:["b-fix"]}
+    ],
+    note:"保底动线：乌镇→桐乡站→杭州东→地铁 19 号线直达萧山机场，全程 ~2h，误机风险低。"}
+];
+
+var LEGS = [
+  { title:"去程 · 香港 → 苏州（待决定：哪天飞）", meta:"苏州无机场，最近枢纽=上海虹桥；晚一天出发 = Day 1 少半天",
+    options:[
+      {name:"基准 · 11/19 飞虹桥 SHA", cost:"~¥1,300–1,500 + ¥40", rec:false,
+       desc:"HKG→SHA 直飞 ~2h10m（东航/上航/港航），落地同栋换高铁 30–40min 到苏州站。选 15:00 前落地 → Day 1 剩平江路夜游半天。", conf:"b-hi"},
+      {name:"省钱 · 11/19 飞浦东 PVG", cost:"~¥800–1,000 + ¥80", rec:false,
+       desc:"班次最多最便宜，但浦东→苏州要机场大巴 ~2.5h / 地铁 2 号线穿城换高铁。省 ¥500 换 +1h 折腾。", conf:"b-md"},
+      {name:"Day 1 玩满 · 11/18 晚飞上海+住虹桥", cost:"机票 + 酒店 ~¥300", rec:true,
+       desc:"下班后晚班机落地 SHA/PVG，虹桥边住一晚，早班高铁 8:30 到苏州 → Day 1 变整天。代价：多一晚酒店。", conf:"b-hi"},
+      {name:"Day 1 玩满 · 11/18 飞无锡 UO214", cost:"HK$600–800 + 苏州酒店 1 晚", rec:true,
+       desc:"16:15→18:45 直飞无锡（HK Express 每日一班），落地 1h 到苏州，当晚 20:30 入住、还能平江路宵夜——最直接的满日方案，但要赶得上 16:15 的机。", conf:"b-hi"},
+      {name:"动卧 G896（已排除）", cost:"动卧 ¥860 / 二等 ¥725", rec:false,
+       desc:"西九龙 20:00 → 虹桥 06:58（11/18 周三有班）——其实是最便宜也最省时的玩法，但已定不坐卧铺，留档备查。", conf:"b-est"}],
+    verdict:"要 Day 1 玩满又不想动卧 → 二选一：11/18 晚班机+虹桥酒店（舒服、选择多）或飞无锡（当晚人就在苏州、但要赶 16:15）。不急定，但 11/13 前决定苏博要抢哪天的号。"},
+  { title:"城际 · 苏州 ↔ 乌镇 ↔ 杭州", meta:"全程大巴/高铁无缝，不用包车",
+    options:[
+      {name:"苏州 → 乌镇：北广场景区直通车", cost:"¥35–55 · 1.5h", rec:true,
+       desc:"苏州站北广场汽车站发车，直达西栅游客中心，每天 8 班（07:50–17:00）。比「高铁到桐乡+K282 公交」少一次换乘。", conf:"b-hi"},
+      {name:"乌镇 → 杭州：大巴 / 桐乡站高铁", cost:"¥17–35 · 20min–1.5h", rec:true,
+       desc:"乌镇汽车站大巴直达杭州客运中心 1.5h；或打车 40min 到桐乡站，G 字 20min 到杭州东，更快但更贵（含打车 ~¥60–80）。", conf:"b-hi"},
+      {name:"苏州市内 → 杭州萧山机场", cost:"地铁 19 号线直达", rec:false,
+       desc:"杭州东站/市区坐 19 号线（机场快线）直达 HGH，~30–40min，无需出站换乘。", conf:"b-hi"}],
+    verdict:"苏州↔乌镇走直通车最省心；乌镇→机场保底走桐乡站→杭州东→19 号线（~2h）。"},
+  { title:"回程 11/22 · 杭州 → 香港", meta:"直飞 ~2.5h，每天有 4–6 班",
+    options:[
+      {name:"直飞 HGH→HKG ~19:35（已锁定）", cost:"~HK$650–800", rec:true,
+       desc:"国泰 CX961 15:55→18:35 / 国航 CA727 14:45→17:20 / 港航 HX129 / 长龙 GJ8053 13:40→16:20，最晚 ~19:35→22:20。晚班机=白天玩到 16:30，当晚回家睡自己床。", conf:"b-hi"},
+      {name:"G899 动卧（备选）", cost:"软卧 ~¥2,100 / 二等 ¥769", rec:false,
+       desc:"杭州东 21:15 → 西九龙 07:25（日一有班，11/22 开行）——玩到 20:00 再上车、周一早上到港。若临时想榨干 Day 4 可切换。", conf:"b-est"}],
+    verdict:"已锁定晚班机 ~19:35；若想再榨 3 小时游玩时间，最后还能改 G899。"}
+];
+
+var STAYS = [
+  { title:"苏州 · 住观前街/平江路", why:"步行可达拙政园、苏博、平江路；地铁 1/4 号线交汇——第一次来苏州的最优基地",
+    tiers:[
+      ["¥200–350 经济","白玉兰（地铁 4 号线出口 20m，2023 新开，智能家居）","小巷里太监弄/旧学前路的客栈更安静便宜"],
+      ["¥350–500 中端","全季观前街平江路店（苏式园林装修，评分 4.7）","亚朵观前街 ~¥500+"],
+      ["提示","周五周六房价 +30%——你住 11/19（四）+11/20（五），第二晚踩到加价","提前订，选地铁口 500m 内"]]},
+  { title:"乌镇 · 住西栅门口", why:"11/21 是周六——乌镇住宿全程最贵一晚；景区内 vs 外是真正的取舍点",
+    tiers:[
+      ["¥250–400 景区外","西栅门口步行 5 分钟的客栈（如墨庭濯涟居这类高分民宿）","省钱首选；缺点是要买票进出、无早茶客"],
+      ["¥600–1500 景区内","官方民宿/酒店（堤上等）","含两日联票+免费早茶客+无限次进出+行李托运——预算够值得体验一次"],
+      ["建议","想省钱住外面、只看西栅夜景即可；想深度水乡体验住里面、加玩第二天东栅","东栅 ¥110 单独买不划算，住里面联票 ¥190 两日"]]}
+];
+
+var PREP = [
+  {t:"苏州博物馆预约（11/19 或 11/20 场，看去程）", why:"公众号「苏州博物馆」提前 7 天放号——选满日版抢 11/19 场（11/12 放）、半天版抢 11/20 场（11/13 放）", urg:"!"},
+  {t:"决定去程方案（11/19 早班 vs 11/18 晚班）并订机票", why:"决定 Day 1 是半天还是整天；11/13 前定——苏博要按这天抢号", urg:"!"},
+  {t:"订回程机票 HGH→HKG ~19:35（已定方向）", why:"国泰/国航/港航/长龙直飞，~HK$650–800，越晚越贵", urg:"!"},
+  {t:"订乌镇 11/21 周六晚住宿", why:"全行程最贵一晚，越早越好", urg:"mid"},
+  {t:"订苏州 11/19–20 两晚（观前街/平江路）", why:"11/20 周五有周末加价，先锁房", urg:"mid"},
+  {t:"拙政园分时票（约 7:30–9:30 时段）", why:"「君到苏州」小程序或携程，顶门进人少", urg:"mid"},
+  {t:"买虹桥→苏州高铁 + 苏州→乌镇大巴票", why:"12306 / 好行网，提前几天买即可，班次密", urg:""},
+  {t:"装支付宝/微信支付并绑卡 + 电子地铁码", why:"大陆基本无现金社会；回乡证可过 12306 实名", urg:""},
+  {t:"出发前 2–3 天复核天气", why:"冷锋时间可能漂移；若 17–18 雨带推迟，行程顺序可微调", urg:""}
+];
+
+var BUDGET = [
+  ["去程机票（方案 A）","HK$800–1,500"],
+  ["回程机票（直飞）","HK$650–800"],
+  ["住宿 3 晚（÷2 人）","~¥450–750"],
+  ["门票（拙 70+虎 60+寒 20+西栅 150）","~¥300"],
+  ["城际交通（高铁+大巴+地铁）","~¥100"],
+  ["餐饮市内杂项","~¥400–600"],
+  ["total","~HK$3,500–5,000"]
+];
+
+/* ---------- render ---------- */
+function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+function badgeRow(list){ if(!list||!list.length) return ""; var labels={"b-hi":"确认","b-md":"参考","b-est":"估算","b-must":"必去","b-opt":"可选","b-fix":"固定时间"};
+  return '<div style="margin-top:3px">'+list.map(function(b){return '<span class="badge '+b+'">'+(labels[b]||b)+'</span>';}).join("")+'</div>'; }
+
+try {
+  var r=document.getElementById("route");
+  r.innerHTML=ROUTE.map(function(s,i){ return '<span class="rstep'+(s.to?"":"")+'" data-k="'+(s.to||"")+'"><span class="rn">'+(i+1)+'</span>'+esc(s.t)+'</span>'; }).join('<span style="color:#4a4a44;align-self:center">›</span>');
+} catch(e){}
+
+try {
+  var w=document.getElementById("wxtable");
+  w.innerHTML='<tr><th>日期</th><th>苏州</th><th>杭州</th></tr>'+WEATHER.map(function(d){
+    return '<tr class="'+d[3]+'"><td>'+d[0]+'</td><td>'+d[1]+'</td><td>'+d[2]+'</td></tr>'; }).join("");
+} catch(e){}
+
+try {
+  var dEl=document.getElementById("days");
+  dEl.innerHTML=DAYS.map(function(d,di){
+    var stops=d.stops.map(function(s){
+      return '<div class="stop" id="stop-'+(s.k||("d"+di+"-"+s.name.length))+'" data-k="'+(s.k||"")+'">'+
+        '<span class="sn" data-k="'+(s.k||"")+'">'+(s.k?PLACES[s.k].pin:"·")+'</span>'+
+        '<div class="sbody"><div class="sname">'+esc(s.name)+'</div>'+
+        '<div class="smeta">'+esc(s.meta)+'</div>'+
+        (s.warn?'<div class="swarn">⚠ '+esc(s.warn)+'</div>':"")+
+        (s.note?'<div class="snote">'+esc(s.note)+'</div>':"")+
+        badgeRow(s.badges)+'</div></div>';
+    }).join("");
+    return '<details class="day" open><summary><span class="dtag">'+esc(d.tag)+'</span>'+esc(d.title)+
+      ' <span class="dwx">'+esc(d.wx)+'</span><span class="dmeta">'+esc(d.meta)+'</span></summary>'+
+      '<div class="dbody">'+stops+'<div class="dnote">'+esc(d.note)+'</div></div></details>';
+  }).join("");
+} catch(e){}
+
+try {
+  var lEl=document.getElementById("legs");
+  lEl.innerHTML=LEGS.map(function(l){
+    var opts=l.options.map(function(o){
+      return '<div class="opt'+(o.rec?" rec":"")+'"><div class="orow"><span class="oname">'+esc(o.name)+
+        (o.rec?' <span class="badge b-hi">推荐</span>':"")+'</span><span class="ocost">'+esc(o.cost)+'</span></div>'+
+        '<div class="odesc">'+esc(o.desc)+'</div>'+badgeRow([o.conf])+'</div>';
+    }).join("");
+    return '<div class="leg"><div class="ltitle">'+esc(l.title)+'</div><div class="lmeta">'+esc(l.meta)+'</div>'+opts+
+      '<div class="verdict">'+esc(l.verdict)+'</div></div>';
+  }).join("");
+} catch(e){}
+
+try {
+  var sEl=document.getElementById("stays");
+  sEl.innerHTML=STAYS.map(function(s){
+    var tiers=s.tiers.map(function(t){
+      return '<div class="tier"><span class="tp">'+esc(t[0])+'</span><div class="td">'+esc(t[1])+(t[2]?'<small>'+esc(t[2])+'</small>':"")+'</div></div>';
+    }).join("");
+    return '<div class="stay"><div class="stitle">'+esc(s.title)+'</div><div class="swhy">'+esc(s.why)+'</div>'+tiers+'</div>';
+  }).join("");
+} catch(e){}
+
+try {
+  var pEl=document.getElementById("prep");
+  var done={}; try{ done=JSON.parse(store.get("sz-prep")||"{}"); }catch(e){ done={}; }
+  pEl.innerHTML=PREP.map(function(t,i){
+    var cls=t.urg==="!"?"urg":(t.urg==="mid"?"urg mid":"urg"); var lab=t.urg==="!"?"!紧急":(t.urg==="mid"?"尽早":"备");
+    return '<label class="task'+(done[i]?" done":"")+'"><input type="checkbox" data-i="'+i+'"'+(done[i]?" checked":"")+'>'+
+      '<span class="tt">'+esc(t.t)+'<div class="twhy">'+esc(t.why)+'</div></span>'+
+      (t.urg?'<span class="'+cls+'">'+lab+'</span>':"")+'</label>';
+  }).join("");
+  pEl.addEventListener("change",function(ev){
+    var cb=ev.target; if(cb.type!=="checkbox")return;
+    var i=cb.getAttribute("data-i"); done[i]=cb.checked;
+    cb.closest(".task").classList.toggle("done",cb.checked);
+    store.set("sz-prep",JSON.stringify(done));
+  });
+} catch(e){}
+
+try {
+  var bEl=document.getElementById("budget");
+  bEl.innerHTML=BUDGET.map(function(r){
+    return '<tr'+(r[0]==="total"?' class="total"':"")+'><td>'+(r[0]==="total"?"合计 / 人":esc(r[0]))+'</td><td>'+esc(r[1])+'</td></tr>';
+  }).join("");
+} catch(e){}
+
+/* ---------- map ---------- */
+try {
+  if (window.L) {
+    var map=L.map("map",{scrollWheelZoom:false}).setView([30.95,120.55],9);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OSM"}).addTo(map);
+    var markers={};
+    Object.keys(PLACES).forEach(function(k){
+      var p=PLACES[k];
+      var cls="num-pin"+(p.hub?" hub":"")+(p.opt?" opt":"");
+      var m=L.marker(p.ll,{icon:L.divIcon({className:cls,html:"<div>"+p.pin+"</div>",iconSize:[26,26],iconAnchor:[13,13]})})
+        .addTo(map).bindPopup("<b>"+esc(p.n)+"</b>");
+      m.on("click",function(){ flashStop(k); });
+      markers[k]=m;
+    });
+    map.fitBounds([[31.40,120.45],[30.20,120.65]],{padding:[20,20]});
+    var scrim=document.getElementById("mapscrim");
+    scrim.addEventListener("click",function(){ document.getElementById("mapwrap").classList.add("active"); });
+  } else {
+    document.getElementById("map").style.display="none";
+    document.getElementById("mapfb").style.display="block";
+  }
+} catch(e){
+  try{ document.getElementById("map").style.display="none"; document.getElementById("mapfb").style.display="block"; }catch(_){}
+}
+
+function flashStop(k){
+  var el=document.querySelector('.stop[data-k="'+k+'"]');
+  if(!el)return;
+  var day=el.closest("details"); if(day && !day.open) day.open=true;
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+}
+
+/* route ribbon + stop number → map pan */
+document.addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-k]"); if(!t||!t.getAttribute("data-k"))return;
+  var k=t.getAttribute("data-k");
+  if(markers[k]&&window.L){ markers[k].openPopup(); }
+  if(t.classList.contains("rstep")) flashStop(k);
+});
+var markers = markers || {};
+</script>
+</body>
+</html>

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<title>苏州·乌镇 4 日 · 操作版</title>
+<style>
+  * { margin:0; box-sizing:border-box; }
+  :root { --ink:#1a1a1a; --mut:#6b6b66; --line:#e2e0da; --bg:#faf9f7;
+          --ok:#15803d; --warn:#b45309; --urg:#b91c1c; --act:#1d4ed8; --soft:#f3f1ec; }
+  body { background:var(--bg); color:var(--ink);
+         font:14px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft JhengHei",sans-serif; }
+  .wrap { max-width:840px; margin:0 auto; padding:0 16px 48px; }
+  a { color:var(--act); text-decoration:none; } a:hover { text-decoration:underline; }
+
+  /* sticky status bar */
+  .status { position:sticky; top:0; z-index:50; background:var(--bg); border-bottom:1px solid var(--line);
+            padding:10px 0; display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; font-size:12.5px; }
+  .status .t { font-weight:700; font-size:14px; }
+  .status .cd { font-variant-numeric:tabular-nums; }
+  .pill { display:inline-block; font-size:11px; padding:0 7px; border-radius:10px; border:1px solid var(--line); background:#fff; white-space:nowrap; }
+  .pill.ok { color:var(--ok); border-color:#bcd9c4; background:#eef6ef; }
+  .pill.warn { color:var(--warn); border-color:#e3cba4; background:#faf3e6; }
+  .pill.urg { color:var(--urg); border-color:#e3b4b4; background:#faecec; }
+
+  h1 { font-size:19px; margin:18px 0 2px; }
+  .sub { color:var(--mut); font-size:12.5px; margin-bottom:14px; }
+
+  h2 { font-size:12px; letter-spacing:.1em; color:var(--mut); font-weight:700; margin:28px 0 8px;
+       padding-bottom:5px; border-bottom:1px solid var(--line); display:flex; gap:10px; align-items:baseline; }
+  h2 .n { color:var(--act); }
+  h2 .hint { margin-left:auto; font-weight:400; letter-spacing:0; font-size:11px; }
+
+  /* generic table */
+  table { width:100%; border-collapse:collapse; font-size:12.5px; background:#fff; border:1px solid var(--line); }
+  th { text-align:left; color:var(--mut); font-weight:600; font-size:11.5px; padding:6px 10px; border-bottom:1px solid var(--line); background:var(--soft); }
+  td { padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  tr.sel td { background:#eef4ff; }
+  tr.dim td { color:var(--mut); }
+  .num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .tag { font-size:10px; padding:0 5px; border-radius:4px; border:1px solid var(--line); color:var(--mut); white-space:nowrap; }
+  .tag.ok { color:var(--ok); border-color:#bcd9c4; } .tag.warn { color:var(--warn); border-color:#e3cba4; }
+  .tag.urg { color:var(--urg); border-color:#e3b4b4; } .tag.fix { color:var(--act); border-color:#b9ccf0; }
+  .pickmark { color:var(--ok); font-weight:700; }
+
+  /* decision selector */
+  .dec { background:#fff; border:1px solid var(--line); }
+  .dec label { display:flex; gap:10px; padding:9px 10px; border-bottom:1px solid var(--line); cursor:pointer; align-items:flex-start; font-size:12.5px; }
+  .dec label:last-child { border-bottom:none; }
+  .dec label:hover { background:var(--soft); }
+  .dec label.chosen { background:#eef4ff; }
+  .dec input { margin-top:3px; accent-color:var(--act); }
+  .dec .dt { flex:1; } .dec .dc { white-space:nowrap; color:var(--mut); font-size:11.5px; }
+  .dec .dd { color:var(--mut); font-size:11.5px; margin-top:2px; }
+  .decnote { font-size:11.5px; color:var(--mut); padding:7px 10px; border-top:1px solid var(--line); background:var(--soft); }
+
+  /* day blocks */
+  .day { border:1px solid var(--line); background:#fff; margin-bottom:8px; }
+  .day .dh { padding:8px 12px; background:var(--soft); font-size:12.5px; font-weight:700; display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+  .day .dh .wx { font-weight:400; color:var(--mut); font-size:11.5px; }
+  .day .dh .loc { margin-left:auto; font-weight:400; color:var(--act); font-size:11.5px; }
+  .day .st { display:flex; gap:10px; padding:6px 12px; border-top:1px dashed var(--line); font-size:12.5px; }
+  .day .st .tm { min-width:86px; color:var(--mut); font-size:11.5px; font-variant-numeric:tabular-nums; padding-top:1px; }
+  .day .st .tm.fix { color:var(--act); font-weight:600; }
+  .day .st .bd { flex:1; }
+  .day .st .mt { color:var(--mut); font-size:11.5px; margin-top:1px; }
+  .day .dn { padding:6px 12px; font-size:11.5px; color:var(--warn); border-top:1px dashed var(--line); background:#fdfaf3; }
+
+  /* checklist */
+  .task { display:flex; gap:9px; padding:7px 10px; border-bottom:1px solid var(--line); font-size:12.5px; background:#fff; align-items:flex-start; }
+  .task:last-child { border-bottom:none; }
+  .task input { margin-top:4px; accent-color:var(--ok); }
+  .task .tt { flex:1; } .task.done .tt { opacity:.4; text-decoration:line-through; }
+  .task .twhy { color:var(--mut); font-size:11px; }
+  .task .lk { font-size:11px; white-space:nowrap; }
+
+  /* copy buttons */
+  .cp { font:11px inherit; border:1px solid var(--line); background:#fff; color:var(--mut);
+        padding:0 6px; border-radius:4px; cursor:pointer; margin-left:6px; vertical-align:1px; }
+  .cp:hover { color:var(--act); border-color:var(--act); }
+  .cp.ok { color:var(--ok); border-color:var(--ok); }
+
+  .note { font-size:11.5px; color:var(--mut); margin-top:6px; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:680px){
+    .cols { grid-template-columns:1fr; } .day .st .tm { min-width:70px; }
+    .wrap { padding:0 10px 40px; }
+    table { font-size:11.5px; } td, th { padding:5px 6px; }
+    #gmap { height:230px; }
+    .status { font-size:11.5px; gap:4px 10px; }
+    h1 { font-size:17px; }
+    .dyl { flex-wrap:wrap; } .dseg { flex:1 1 42%; } .darr { display:none; }
+    .dec label { flex-wrap:wrap; } .dec .dc { width:100%; margin:2px 0 0 26px; white-space:normal; }
+  }
+  .box { background:#fff; border:1px solid var(--line); padding:8px 12px; font-size:12.5px; }
+  .box b.k { font-size:11px; color:var(--mut); letter-spacing:.06em; display:block; margin-bottom:4px; }
+
+  /* zone dividers */
+  html { scroll-behavior:smooth; }
+  h2 { scroll-margin-top:58px; }
+  .zone { margin:36px 0 2px; padding-top:10px; border-top:2px solid var(--ink);
+          font-size:11px; letter-spacing:.14em; color:var(--ink); font-weight:700;
+          display:flex; gap:10px; align-items:baseline; }
+  .zone .zlinks { margin-left:auto; font-weight:400; letter-spacing:0; font-size:11px; }
+  .zone .zlinks a { color:var(--mut); margin:0 4px; }
+  .quicknav { font-size:11.5px; margin:-8px 0 14px; }
+  .quicknav a { color:var(--mut); margin-right:12px; }
+  .pill.act { color:var(--act); border-color:#b9ccf0; background:#eef4ff; }
+  .tag.must { color:#fff; background:var(--urg); border-color:var(--urg); }
+  .tdot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:1px; }
+  .dseg { cursor:pointer; } .dseg:hover { background:var(--soft); }
+  tr:target td { background:#eef4ff; }
+
+  /* garden map */
+  #gmap { height:300px; border:1px solid var(--line); border-radius:4px; margin:6px 0 4px; }
+  .maptog { display:flex; gap:6px; margin:6px 0 0; }
+  .maptog button { font-size:11.5px; padding:3px 10px; border:1px solid var(--line); background:#fff; border-radius:3px; cursor:pointer; color:var(--mut); }
+  .maptog button.on { color:var(--act); border-color:#b9ccf0; background:#eef4ff; font-weight:600; }
+  .glegend { display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--mut); margin:2px 0 8px; }
+  .glegend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; }
+
+  /* dynasty strip */
+  .dyl { display:flex; gap:6px; align-items:stretch; margin:6px 0 8px; }
+  .dseg { flex:1; border:1px solid var(--line); border-top:3px solid; background:#fff; padding:6px 8px; font-size:11.5px; line-height:1.45; }
+  .dseg b { display:inline-block; font-size:10px; color:#fff; padding:0 5px; border-radius:3px; margin-right:5px; }
+  .dseg:nth-child(1) b{background:#78716c}.dseg:nth-child(3) b{background:#7c3aed}
+  .dseg:nth-child(5) b{background:#b45309}.dseg:nth-child(7) b{background:#15803d}
+  .dseg span { color:var(--mut); font-size:10.5px; }
+  .darr { align-self:center; color:var(--mut); font-size:11px; }
+  .gstory { color:var(--mut); font-size:11.5px; }
+
+  /* spot deep-dive */
+  .spot { border:1px solid var(--line); border-left:3px solid var(--act); background:#fff;
+          padding:8px 12px; margin:10px 0; font-size:12px; line-height:1.55; }
+  .spot h3 { font-size:13px; margin:0 0 2px; }
+  .spot .meta { color:var(--mut); font-size:11px; margin-bottom:6px; }
+  .spot .rt { font-size:11.5px; color:var(--ink); background:var(--soft); padding:4px 8px; border-radius:3px; margin:4px 0 6px; }
+  .spot li { margin:2px 0; }
+  .spot .pay { color:var(--mut); font-size:11px; border-top:1px dashed var(--line); margin-top:6px; padding-top:5px; }
+  .spot .pay b { color:var(--ink); }
+
+  @media print {
+    .status { position:static; } .cp, .dec input { display:none; }
+    body { background:#fff; } a { color:var(--ink); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="status">
+  <span class="t">苏州·乌镇 4 日</span>
+  <span class="cd" id="countdown"></span>
+  <span class="pill ok">回程 ✓ 晚班机 ~19:35</span>
+  <span class="pill warn" id="pOutbound">去程 · 待决定</span>
+  <span class="pill urg" id="pSubo">苏博放号 · 待定</span>
+  <span class="pill act" id="pNext">下一步 · 在 01 选定去程</span>
+</div>
+
+<h1>行程操作文档 · 11/19（四）– 11/22（日）· 2 人 · 香港往返</h1>
+<div class="sub">分区：⓵ 本周决策 → ⓶ 现场执行 → ⓷ 依据参考 · 分段不按钟点，只有火车/飞机标死时间 · 颜色 = 状态</div>
+<div class="quicknav">跳：<a href="#s03">清单</a><a href="#s04">行程</a><a href="#s06">地图</a><a href="#s07">功课</a><a href="#s08">地名</a></div>
+
+<div class="zone">⓵ 决策 · 本周内完成</div>
+
+<h2 id="s01"><span class="n">01</span>去程方案（点选即存档）<span class="hint">决定 Day 1 半天 vs 整天 · 决定苏博抢哪天号</span></h2>
+<div class="dec" id="decOutbound"></div>
+
+<h2 id="s02"><span class="n">02</span>住宿<span class="hint">苏州观前街/平江路 · 乌镇西栅</span></h2>
+<table id="stays"></table>
+<div class="note">基准 = 苏州 2 晚 + 乌镇 1 晚；选满日方案表格首行会自动多出 11/18 一晚。乌镇周六是全程最贵一晚：景区内 ¥600–1500（含两日联票+早茶客+托运）vs 景区外步行 5 分钟 ¥250–400。</div>
+
+<h2 id="s03"><span class="n">03</span>预订清单 · 按紧急度<span class="hint" id="prepProg">打勾存档</span></h2>
+<div class="dec" id="prep"></div>
+
+<div class="zone">⓶ 行程 · 现场执行<span class="zlinks"><a href="#s04">分日</a>·<a href="#s05">加点</a>·<a href="#s06">地图</a>·<a href="#s07">功课</a>·<a href="#s08">地名</a></span></div>
+
+<h2 id="s04"><span class="n">04</span>分日行程<span class="hint" id="planmode">随 01 的去程选择自动切换</span></h2>
+<div id="days"></div>
+
+<h2 id="s05"><span class="n">05</span>顺路加点 · 中途站 & 在地美食<span class="hint">美食源：小红书帖（含商家自荐，已标注）</span></h2>
+<table id="stops"></table>
+<table id="eats" style="margin-top:6px"></table>
+
+<h2 id="s06"><span class="n">06</span>地图 · 古城 / 全程<span class="hint">pin 约位 · 点 pin 看要点+跳功课 · 导航用 <a href="#s08">08 地名表</a></span></h2>
+<div class="maptog"><button class="on" data-v="city">苏州古城</button><button data-v="route">全程路线</button></div>
+<div id="gmap"></div>
+<div class="glegend"><span><i style="background:#16a34a"></i>园林</span><span><i style="background:#7c3aed"></i>寺·馆</span><span><i style="background:#2563eb"></i>街区/夜市</span><span><i style="background:#d97706"></i>水乡</span><span><i style="background:#0ea5e9"></i>杭州</span><span><i style="background:#64748b"></i>交通</span><span>· 滚轮缩放已关，双击缩放</span></div>
+
+<h2 id="s07"><span class="n">07</span>园林功课 · 按朝代逛<span class="hint">四大名园 = 宋元明清 · 点朝代块跳对应行 · 红必/蓝荐</span></h2>
+<div class="dyl">
+  <div class="dseg" data-t="g-沧浪亭" style="border-color:#78716c"><b>宋</b>沧浪亭<br><span>简远疏朗 · 门外借水</span></div>
+  <div class="darr">→</div>
+  <div class="dseg" data-t="g-狮子林" style="border-color:#7c3aed"><b>元</b>狮子林<br><span>禅意假山 · 立体迷宫</span></div>
+  <div class="darr">→</div>
+  <div class="dseg" data-t="g-拙政园" style="border-color:#b45309"><b>明</b>拙政园<br><span>文人画意 · 以水为主</span></div>
+  <div class="darr">→</div>
+  <div class="dseg" data-t="g-留园" style="border-color:#15803d"><b>清</b>留园<br><span>空间戏剧 · 建筑密度</span></div>
+</div>
+<table id="gardens"></table>
+<div id="spots"></div>
+
+<h2 id="s08"><span class="n">08</span>地名 · 点 ⧉ 复制<span class="hint">订车/地图/问人直接用</span></h2>
+<div class="glegend"><span><i style="background:#16a34a"></i>园林</span><span><i style="background:#7c3aed"></i>寺·馆</span><span><i style="background:#2563eb"></i>街区</span><span><i style="background:#d97706"></i>水乡</span><span><i style="background:#0ea5e9"></i>杭州</span><span><i style="background:#64748b"></i>交通</span><span>· <span class="tag must">必</span>=必去</span></div>
+<table id="places"></table>
+
+<div class="zone">⓷ 依据 · 参考</div>
+
+<h2 id="s09"><span class="n">09</span>交通明细</h2>
+<div class="cols" id="legs"></div>
+
+<h2 id="s10"><span class="n">10</span>天气 · 日期依据<span class="hint">Open-Meteo · 出发前 2–3 天复核</span></h2>
+<table id="wx"></table>
+<div class="note">绿行 = 选中窗口。11/17–18 冷锋过境（杭州最低 2.6°C），过境后 19–22 全晴回暖。想要「烟雨江南」：真雨只在 17–18（已为冷锋避开）；窗口内靠<b>晨雾版</b>——11/21 预报晨雾，乌镇清晨（住景区内 6:30–9:00 空景+河面雾）+九溪烟树（秋季晨雾常态）是 11 月江南的正确打开方式。</div>
+
+<h2 id="s11"><span class="n">11</span>预算 · 每人</h2>
+<table id="budget"></table>
+
+<div class="note" style="margin-top:16px;border-top:1px solid var(--line);padding-top:10px">
+  数据源：Open-Meteo · 携程/去哪儿时刻 · 乌镇官网 · Trip.com/国泰 · 12306 · 美团/Agoda · 小红书帖（美食段，含商家自荐已标注）。
+  待确认项：乌镇→萧山机场直达大巴班次（保底：桐乡站→杭州东→地铁19号线，~2h）。机票价为 11/11 即期查询，订票时以实际为准。
+</div>
+
+</div>
+
+<script>
+/* ---------- storage (file:// safe) ---------- */
+var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},
+           set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+function el(id){return document.getElementById(id);}
+
+/* ---------- countdown ---------- */
+function renderCountdown(){
+  try{
+    var now=new Date(),s=+(store.get(OBKEY)||-1);
+    var d1=Math.ceil((new Date("2026-11-19T00:00:00+08:00")-now)/864e5);
+    var d2=Math.ceil((new Date(isFull(s)?"2026-11-12T00:00:00+08:00":"2026-11-13T00:00:00+08:00")-now)/864e5);
+    el("countdown").innerHTML="距出发 <b>"+(d1>0?d1+" 天":"已出发")+"</b> · "+
+      (s<0?"距去程决策死线":"距苏博放号")+" <b>"+(d2>0?d2+" 天":(d2===0?"今天！":"已过"))+"</b>";
+  }catch(e){}
+}
+renderCountdown();
+
+/* ---------- 01 outbound decision ---------- */
+var OUTBOUND=[
+ {name:"基准 · 11/19 飞虹桥 SHA",cost:"~¥1,300–1,500 + ¥40",desc:"落地同栋换高铁 30–40min 到苏州站。选 15:00 前到 → Day 1 剩平江路夜游半天。",tag:"fix"},
+ {name:"省钱 · 11/19 飞浦东 PVG",cost:"~¥800–1,000 + ¥80",desc:"最便宜但浦东→苏州要大巴 ~2.5h / 地铁 2 号线穿城。省 ¥500 换 +1h。",tag:""},
+ {name:"半天+ · 11/19 午班飞无锡 ZH9096",cost:"票价另查",desc:"深航每日直飞 12:30→15:00 · 到苏州 ~17:00 —— 与飞虹桥同点到但免虹桥→高铁换乘，行李党友好。",tag:"",
+  d1:{h:"DAY 1 · 11/19 四 · 赶路日",wx:"冷 4–12°C 晴",loc:"香港 → 无锡 → 苏州",rows:[
+   ["~10:30",1,"出门 → 香港机场","ZH9096 值机（深航 T1）"],
+   ["12:30",1,"HKG → 无锡 WUX","✈ 直飞 2.5h → 15:00 · 每日班"],
+   ["~16:00",1,"无锡 → 苏州","机场大巴/打车 ~1h"],
+   ["~17:00",0,"入住观前街/平江路 + 夜游晚饭","🏨 ¥250–450/间 · 哑巴生煎/苏式汤面"]],
+  note:"与飞虹桥同样傍晚到苏州，但全程一次接驳、不用换火车——行李多的最优半天案。"}},
+ {name:"满日 · 11/18 晚飞上海+住虹桥",cost:"~HK$900–1,500 + 酒店 ~¥300",desc:"FM810 上航 20:20→22:40 虹桥 T1（每日·东航 MU8630 共享）· 落地即虹桥枢纽步行进酒店 · ⚠ CX328 18:35→20:55 仅一/四/日班，11/18 周三没有。",tag:"ok",full:1},
+ {name:"满日 · 11/18 飞无锡 UO214",cost:"HK$600–800 + 苏州 1 晚",desc:"16:15→18:45 直飞（HK Express 每日班），落地 1h 到苏州，当晚还能平江路宵夜。需赶上 16:15。",tag:"",full:1},
+ {name:"满日 · 11/18 午班飞无锡 ZH9096",cost:"票价另查 + 苏州 1 晚",desc:"深航每日 12:30→15:00（比 UO214 早 3h45m 落地）· 到苏州 ~16:30 → 白赚整个傍晚。国航/国泰代码共享可订。",tag:"ok",full:1},
+ {name:"满日 · 11/18 高铁直达 G902",cost:"二等 ~¥910–930",desc:"西九龙 11:35 → 苏州南 19:14 · 7.5h 直达·零机场零换乘 · ⚠ 苏州南在吴江离古城 ~40km +1h 接驳 · 调图后订前核 12306",tag:"fix",full:1},
+ {name:"参考 · G896 动卧（已排除）",cost:"动卧 ¥860 / 座 ¥725",desc:"西九龙 20:00→虹桥 06:58，11/18 周三有班。最便宜省时但你不坐卧铺——仅留档。",tag:"dim",full:1}
+];
+function isFull(i){return OUTBOUND[i]&&OUTBOUND[i].full===1;}
+var OBKEY="sz-outbound2";
+(function(){try{
+  if(store.get(OBKEY)===null||store.get(OBKEY)===undefined){
+    var old=store.get("sz-outbound");
+    if(old!==null&&old!==undefined&&old!==""){var M={0:0,1:1,2:3,3:4,4:7};store.set(OBKEY,(M[+old]!==undefined?M[+old]:-1));store.set("sz-outbound","");}
+  }
+}catch(e){}})();
+function updPills(i){
+  var full=isFull(i);
+  if(i<0){
+    el("pOutbound").textContent="去程 · 待决定";el("pOutbound").className="pill warn";
+    el("pSubo").textContent="苏博放号 · 待定";
+    el("pNext").textContent="下一步 · 在 01 选定去程";
+  }else{
+    el("pOutbound").textContent="去程 · 已选 "+OUTBOUND[i].name.split("·")[0].trim()+" → "+OUTBOUND[i].name.split("·")[1].trim();
+    el("pOutbound").className="pill ok";
+    var passed=(new Date())>new Date(full?"2026-11-12T00:00:00+08:00":"2026-11-13T00:00:00+08:00");
+    el("pSubo").textContent="苏博 "+(full?"11/19":"11/20")+" 场 · "+(passed?"已放号":"放号 ~"+(full?"11/12":"11/13"));
+    el("pSubo").className="pill "+(passed?"urg":"warn");
+    el("pNext").textContent=passed?"下一步 · 苏博已放号 → 立即抢":"下一步 · 抢苏博 "+(full?"11/19":"11/20")+" 场 + 订乌镇周六房";
+  }
+}
+try{
+  var sel=+(store.get(OBKEY)||-1);
+  el("decOutbound").innerHTML=OUTBOUND.map(function(o,i){
+    return '<label data-i="'+i+'" class="'+(sel===i?"chosen":"")+'"><input type="radio" name="ob" '+(sel===i?"checked":"")+'>'+
+      '<span class="dt"><b>'+esc(o.name)+'</b>'+(o.tag?'<span class="tag '+o.tag+'">'+(o.tag==="ok"?"满日":o.tag==="fix"?"半天":o.tag==="dim"?"不采用":"")+'</span>':"")+
+      '<div class="dd">'+esc(o.desc)+'</div></span><span class="dc num">'+esc(o.cost)+'</span></label>';
+  }).join("")+
+  '<div class="decnote">为什么是上海/无锡：苏州无机场，虹桥=机场+高铁站同栋；杭州是出口（回程已锁）→ 北向南不走回头路。<b>新查到</b>：ZH9096 比 UO214 早 3h45m 落地同机场；G902 高铁直达苏州但停的是偏远苏州南。⚠ 苏博按选定那天抢号，死线 ~11/13。</div>';
+  updPills(sel);
+  el("decOutbound").addEventListener("change",function(ev){
+    var lab=ev.target.closest("label"); if(!lab)return;
+    var i=+lab.getAttribute("data-i"); store.set(OBKEY,i);
+    el("decOutbound").querySelectorAll("label").forEach(function(l){l.classList.toggle("chosen",+l.getAttribute("data-i")===i);});
+    updPills(i);renderDays();renderStays();renderBudget();renderCountdown();
+  });
+}catch(e){}
+
+/* ---------- 02 weather ---------- */
+var WX=[["11/14 六","🌧 93% · 26.4mm","🌧 84%",0],["11/15 日","阴→多云 19°C","阴 20°C",0],
+ ["11/16 一","多云 19°C","多云 19°C",0],["11/17 二","🌧 76% · 15.3mm","🌧 83% · 19.2mm",-1],
+ ["11/18 三","冷锋 14/4°C 毛毛雨","15/5°C 毛毛雨",-1],["11/19 四","☀ 干冷转晴 12/4°C","13/3°C",1],
+ ["11/20 五","☀ 晴 16/6°C","☀ 晴 18/5°C",1],["11/21 六","多云 19/8°C","20/5°C 晨雾",1],["11/22 日","多云 19/9°C","☀ 晴 21/8°C",1]];
+try{
+  el("wx").innerHTML='<tr><th style="width:80px">日期</th><th>苏州</th><th>杭州</th><th></th></tr>'+WX.map(function(d){
+    var cls=d[3]===1?"sel":(d[3]===-1?"dim":"");
+    var mark=d[3]===1?'<span class="pickmark">✓ 出行</span>':(d[3]===-1?'<span class="tag urg">避</span>':"");
+    return '<tr class="'+cls+'"><td class="num">'+d[0]+'</td><td>'+d[1]+'</td><td>'+d[2]+'</td><td>'+mark+'</td></tr>';
+  }).join("");
+}catch(e){}
+
+/* ---------- 03 days —— 随去程方案切换 ---------- */
+var DAYS_HALF=[
+ {h:"DAY 1 · 11/19 四 · 赶路日",wx:"冷 4–12°C 晴",loc:"香港 → 苏州",rows:[
+   ["~13:00",1,"香港 → 上海虹桥（选 15:00 前落地）","✈ 直飞 ~2h10m；虹桥机场与火车站同栋"],
+   ["~16:00",1,"虹桥 → 苏州站","🚄 G 字 30–40min · ¥35–40 · 班次密集随买随走"],
+   ["傍晚",0,"入住观前街/平江路 + 平江路夜游晚饭","🏨 ¥250–450/间 · 哑巴生煎/苏式汤面"]],
+  note:"若改 11/18 晚出发 → 本日变整天：拙政园+苏博提前，虎丘+寒山寺 Day 2 不变。"},
+ {h:"DAY 2 · 11/20 五 · 苏州核心",wx:"晴 6–16°C",loc:"苏州",rows:[
+   ["07:30",1,"拙政园（顶门进）","¥70 · 2.5h · 「君到苏州」/携程买 7:30–9:30 分时票"],
+   ["~10:30",0,"苏州博物馆","免费 · 与拙政园一墙之隔 · ⚠ 公众号提前 7 天放号 · 抢不到→西馆免预约"],
+   ["下午",0,"虎丘","¥60 · 云岩寺塔+剑池 · 古城打车 ~30min"],
+   ["傍晚",0,"七里山塘 游船+夜景+晚饭","街免费 · 摇橹船 ~¥50 · 虎丘坐船顺河下山塘最经典"]],note:"加点：狮子林 ¥30 插在苏博后（隔壁 2min）；留园 ¥55 挪到 Day 3 上午与寒山寺打包。嫌满砍山塘游船。"},
+ {h:"DAY 3 · 11/21 六 · 寒山寺 → 乌镇",wx:"晴 8–19°C",loc:"苏州 → 乌镇",rows:[
+   ["上午",0,"寒山寺 + 枫桥","¥20 · 1–1.5h 紧凑 · 想加留园：寒山寺 8:00–9:30 → 留园 10:00–11:30 顺路回城"],
+   ["13:30/14:30",1,"苏州北广场汽车站 → 乌镇西栅","🚌 景区直通车 1.5h · ¥35–55 · 直达游客中心（苏州站北广场上车）"],
+   ["15:00–22:00",0,"西栅 黄昏→亮灯→夜景+摇橹船","¥150 · 开放至 22:00 · 夜景是精华 · 门口吃完再进更省"],
+   ["宿",0,"西栅门口民宿","景区外 ¥250–400 / 景区内 ¥600–1500 含两日联票+早茶客"]],
+  note:"住景区内可加次日东栅（联票 ¥190 两日）；住外面东栅单买 ¥110 看体力取舍。沧浪亭这版塞不下——要它请选满日版。"},
+ {h:"DAY 4 · 11/22 日 · 乌镇晨 → 杭州 → 回港",wx:"晴 9–19°C 最好天气",loc:"乌镇 → 杭州 → 香港",rows:[
+   ["07–09",0,"西栅清晨（住景区内限定）/ 自然醒","晨景人最少最好拍 · 冷空气撞暖河面=平流雾高发，烟雨氛围靠它"],
+   ["~10:00",1,"乌镇 → 杭州","大巴直达 1.5h ¥35 / 打车桐乡站+G 字 20min ¥17–30"],
+   ["~12:00",0,"杭州 3 选 1（下方 03+ 选口味）","A 西湖湖滨→断桥 / B 灵隐寺 ¥75 / C 九溪烟树红枫"],
+   ["≥16:30",1,"杭州东/市区 → 萧山机场","地铁 19 号线直达 ~30–40min · 保底动线 ~2h 内"],
+   ["~19:35",1,"萧山 → 香港 ✈","直飞 ~2.5h → 22:20 到港 · 已锁定方向"]],
+  note:"备选：G899 动卧杭州东 21:15→西九龙 07:25，可把游玩时间延到 20:00。"}
+];
+
+/* 满日版：Day 0 按具体方案不同，Day 1–4 重排 */
+var DAY0={
+ 3:{h:"DAY 0 · 11/18 三 · 下班后晚班机",wx:"—",loc:"香港 → 上海",rows:[
+   ["~17:30",1,"下班 → 香港机场","FM810 值机"],
+   ["20:20",1,"HKG → 虹桥 SHA","FM810（MU8630 共享）→ 22:40 落地 · 每日班"],
+   ["宿",0,"虹桥枢纽边酒店","~¥300 · 同栋/步行可达，不用叫车"],
+   ["次日 08:30",1,"虹桥 → 苏州站","下楼就是火车站 · G 字 30–40min → 整天 Day 1"]],
+  note:"用一晚便宜酒店换掉动卧——成本 +¥300，效果一样：Day 1 变整天。备选晚班机仅浦东有（CX302/HX234 ~23:55），落浦东就失去「同栋换乘」意义。"},
+ 4:{h:"DAY 0 · 11/18 三 · 飞无锡",wx:"—",loc:"香港 → 无锡 → 苏州",rows:[
+   ["16:15",1,"HKG → 无锡 WUX","UO214 → 18:45 · HK Express 每日一班"],
+   ["~19:30",1,"无锡 → 苏州","机场大巴/打车 ~1h"],
+   ["~20:30",0,"入住观前街 + 平江路宵夜","当晚就在苏州，第二天不用赶路"]],
+  note:"分支选项：当晚改住无锡（¥150–250 更便宜）→ Day 1 上午鼋头渚（太湖第一名胜 · 11 月西伯利亚红嘴鸥越冬季）→ 中午 HSR 15min 到苏州 → 下午拙政园。代价：Day 1 苏州变半天。"},
+ 5:{h:"DAY 0 · 11/18 三 · 午班飞无锡 ZH9096",wx:"—",loc:"香港 → 无锡 → 苏州",rows:[
+   ["~10:30",1,"出门 → 香港机场","ZH9096 值机（深航 T1 · 国航/国泰代码共享）"],
+   ["12:30",1,"HKG → 无锡 WUX","ZH9096 直飞 → 15:00 · 每日一班"],
+   ["~16:00",1,"无锡 → 苏州","机场大巴/打车 ~1h"],
+   ["~17:00",0,"入住观前街 + 完整傍晚","17:00 已进古城——比 UO214 多赚 3.5h，晚饭+山塘夜景都够"]],
+  note:"与 UO214 同机场但早 3h45m 落地。分支同 UO214：住无锡玩鼋头渚（11 月红嘴鸥季）。"},
+ 6:{h:"DAY 0 · 11/18 三 · 高铁直达",wx:"—",loc:"西九龙 → 苏州南",rows:[
+   ["11:35",1,"西九龙 G902 → 苏州南","7.5h 直达 · 二等 ~¥910–930 · 沿途杭州西/黄山北可远眺"],
+   ["19:14",1,"到苏州南 → 古城","吴江汾湖距观前街 ~40km · 打车/接驳 ~1h"],
+   ["~20:15",0,"入住观前街","零换乘零机场，末段接驳稍长"]],
+  note:"不坐飞机的满日方案：到点与 UO214 相近、价格略高，胜在全程不换乘、车上能干活。⚠ 苏州南偏远（2025 新站）；车次原 G100 改 G902，订前核 12306。"},
+ 7:{h:"DAY 0 · 11/18 三 · 动卧（已排除）",wx:"—",loc:"香港 → 上海",rows:[
+   ["20:00",1,"西九龙 G896 → 虹桥","动卧 ¥860 / 座 ¥725"],
+   ["次日 06:58",1,"到虹桥 → 苏州站","HSR 30–40min → ~08:30 开启整天"]],
+  note:"最便宜省时的满日方案——留档。"}
+};
+var DAYS_FULL=[
+ {h:"DAY 1 · 11/19 四 · 苏州核心 I",wx:"冷晴 4–12°C",loc:"苏州",rows:[
+   ["08:30",1,"到苏州站 → 观前街放行李","地铁两站 / 打车 ¥15"],
+   ["09:30",0,"拙政园","¥70 · 2.5h · 周四人不算多"],
+   ["13:00",0,"苏州博物馆","免费 · 2h · ⚠ 抢 11/19 场（11/12 放号，今天就该抢）"],
+   ["下午",0,"狮子林 ¥30 或 城南三角","狮子林=苏博隔壁 · 城南三角=沧浪亭¥20+网师园¥40+可园¥25 半天打包"],
+   ["晚",0,"观前街晚饭 + 平江路夜","松鹤楼/小吃"]],
+  note:"Day 1 就把头牌收掉——后面怎么变动都不慌。园林控下午选沧浪亭，拍照控选狮子林。"},
+ {h:"DAY 2 · 11/20 五 · 城西线",wx:"晴 6–16°C",loc:"苏州",rows:[
+   ["07:30",0,"虎丘","¥60 · 南门进→北门出 · 讲解器整点免费发 20 台 · 剑池+斜塔"],
+   ["上午",0,"寒山寺 + 枫桥","¥20 · 打车 15min 直达 · 西门进西门出 · 敲钟 ¥5 · 枫桥免费"],
+   ["中午",0,"西园寺 素面","¥5 · 素面 ¥15 解决午餐 · 寒山寺打车 8min"],
+   ["下午",0,"留园","¥55 · 步行 5min 到 · 14:00–16:15 团队散场+金光穿廊"],
+   ["晚",0,"七里山塘 夜景+晚饭","留园步行 ~8min 进山塘 · 摇橹船 ~¥50"]],
+  note:"远点先打、越走离家越近：最远一跳（虎丘→寒山寺 ~4km）上午体力最好时一次打车，之后每跳递减到步行，收在留园=山塘隔壁。赶的话砍寒山寺——它在枫桥外也能看到。"},
+ {h:"DAY 3 · 11/21 六 · 乌镇全天",wx:"晴 8–19°C",loc:"苏州 → 乌镇",rows:[
+   ["09:00",1,"苏州北广场 → 乌镇西栅","直通车 1.5h ¥35–55 · 放行李"],
+   ["10:30–15:00",0,"东栅","¥110 · 或联票 ¥190 · 茅盾故居+原生态老街"],
+   ["15:00–22:00",0,"西栅 黄昏→亮灯→夜景+摇橹船","¥150 · 精华时段 · 门口吃完再进"],
+   ["宿",0,"西栅门口/景区内","¥250–400 / ¥600–1500 含两日联票+早茶客"]],
+  note:"整天给乌镇才值回票价；嫌赶就砍掉东栅只玩西栅。"},
+ {h:"DAY 4 · 11/22 日 · 乌镇晨 → 杭州 → 回港",wx:"晴 9–19°C",loc:"乌镇 → 杭州 → 香港",rows:[
+   ["07–09",0,"西栅清晨（住宿福利）/ 自然醒","晨景人最少最好拍 · 冷空气撞暖河面=平流雾高发"],
+   ["~10:00",1,"乌镇 → 杭州","大巴 1.5h / 桐乡站 20min"],
+   ["12:00–16:00",0,"杭州 3 选 1（下方 03+ 选口味）","A 西湖湖滨→断桥 / B 灵隐寺+飞来峰 ¥75 / C 九溪烟树红枫徒步"],
+   ["≥16:30",1,"→ 萧山机场（地铁 19 号线）","保底 ~2h 门到门"],
+   ["~19:35",1,"HGH → HKG ✈","~2.5h → 22:20 到港"]],
+  note:"备选 G899 动卧 21:15 杭州东 → 07:25 西九龙 = 杭州玩到 20:00。"}
+];
+
+function renderDays(){
+  try{
+    var sel=+(store.get(OBKEY)||-1);
+    var full=isFull(sel);
+    var arr=(full?DAYS_FULL:DAYS_HALF).slice();
+    if(OUTBOUND[sel]&&OUTBOUND[sel].d1) arr[0]=OUTBOUND[sel].d1;
+    var all=((full&&DAY0[sel])?[DAY0[sel]]:[]).concat(arr);
+    var hint=el("planmode");
+    if(hint) hint.textContent=full?"当前：满日版（Day 0 晚出发）":(sel>=0?"当前：11/19 飞 · Day 1 半天版":"随 01 的去程选择自动切换");
+    var MUST_K=["拙政园","苏州博物馆","虎丘","寒山寺","西栅"];
+    el("days").innerHTML=all.map(function(d){
+      return '<div class="day"><div class="dh">'+esc(d.h)+'<span class="wx">'+esc(d.wx)+'</span><span class="loc">'+esc(d.loc)+'</span></div>'+
+        d.rows.map(function(r){
+          var mb=(MUST_K.some(function(k){return r[2].indexOf(k)>=0})&&!/民宿|门口|入住|放行李/.test(r[2]))?'<span class="tag must">必</span> ':"";
+          return '<div class="st"><span class="tm'+(r[1]?" fix":"")+'">'+esc(r[0])+'</span><div class="bd">'+mb+esc(r[2])+'<div class="mt">'+esc(r[3])+'</div></div></div>';
+        }).join("")+
+        '<div class="dn">◦ '+esc(d.note)+'</div></div>';
+    }).join("");
+  }catch(e){}
+}
+renderDays();
+
+/* ---------- 03+ 中途站 ---------- */
+var STOPS=[
+ ["同里古镇","苏州→乌镇路上（吴江区）","退思园＝世遗，普遍评价比东栅更值得。打车玩法：苏州→同里 ~¥70 → 同里→乌镇 ~¥90，多花 ~¥160 换半个古镇日","顺停"],
+ ["南浔古镇","乌镇北 ~40min","江南最安静的古镇，大门票免费（小景点另收）。可加 0.5–1 天；Day 3 早出发可 苏州→南浔→乌镇 串成一线","可加"],
+ ["周庄","上海/昆山方向","名气最大也最商业——只有飞 PVG/SHA 且 Day 0 有空才顺","备选"],
+ ["无锡·鼋头渚","飞 WUX 方案顺路","太湖第一名胜 · ¥105 · 11 月西伯利亚红嘴鸥越冬，季节限定加分项","顺停"],
+ ["上海市内","飞 SHA/PVG 中转","Day-0 若早到有半天：外滩/豫园/武康路一段，然后虹桥进苏州","顺带"],
+ ["海宁盐官","乌镇→杭州偏东","钱塘江观潮地——11 月非大潮期，专程不值，仅路过知道一下","跳过"],
+ ["杭州 Day 4 口味 A","西湖湖滨→断桥→白堤","免费 · 最稳 · 2h 快闪经典","选 1"],
+ ["杭州 Day 4 口味 B","灵隐寺+飞来峰","¥75 · 2.5h · 文化浓度最高","选 1"],
+ ["杭州 Day 4 口味 C","九溪烟树徒步","免费 · 2.5h · 11 月中下旬红枫溪谷正当时，本地人私藏","选 1"]
+];
+try{
+  el("stops").innerHTML='<tr><th style="width:22%">地点</th><th style="width:22%">位置/顺路条件</th><th>怎么插 · 值不值</th><th style="width:56px"></th></tr>'+
+  STOPS.map(function(s){
+    var tc=s[3]==="顺停"||s[3]==="选 1"?"ok":(s[3]==="跳过"?"urg":(s[3]==="备选"?"warn":"fix"));
+    return '<tr><td><b>'+esc(s[0])+'</b></td><td>'+esc(s[1])+'</td><td>'+esc(s[2])+'</td><td><span class="tag '+tc+'">'+esc(s[3])+'</span></td></tr>';
+  }).join("");
+}catch(e){}
+
+/* ---------- G garden briefing ---------- */
+var GARDENS=[
+ ["沧浪亭","宋","#78716c","苏舜钦贬谪所建（1041）· 苏州最古老","进门前先站河边体会「园未入景已至」· 108 式漏窗每扇不同 · 五百名贤祠"],
+ ["狮子林","元","#7c3aed","天如禅师弟子建的寺观园林（1342）· 贝聿铭童年乐园","钻 9 线 21 洞假山迷宫（留 30min 纯玩）· 燕誉堂鸳鸯厅 · 乾隆六访"],
+ ["拙政园","明","#b45309","王献臣失意还乡（1509）· 文徵明参与设计 · 最大","借景北寺塔（塔在 2km 外）· 香洲石舫一船三用 · 与谁同坐轩 · 顶门直奔中园"],
+ ["留园","清","#15803d","刘恕集 12 峰石建寒碧山庄 · 「刘园」谐音改「留园」","入口窄廊先抑后扬 · 冠云峰（江南名石之首）· 700m 廊道串四景"],
+ ["网师园","宋","#78716c","「渔隐」之意 · 殿春簃被原样复制进纽约大都会","全苏最小的名园但密度最高 · 夜游名园（季节限定）"],
+ ["艺圃","明","#b45309","文震孟兄弟药圃 · 藏在阊门深巷里","乳鱼亭临水 · 本地人花几块钱喝茶的隐藏款"],
+ ["怡园","清","#15803d","顾文彬晚年建 · 集各园之长的「收官之作」","观前街步行 5min · 碎片时间填空首选"],
+ ["可园","清","#15803d","沧浪亭正对面 · 书院园林","10 分钟打包 · 跟沧浪亭联游"],
+ ["西园寺","—","#64748b","戒幢律寺 · 五百罗汉堂","素面 ¥15 解决午餐 · 撸猫 · 留园隔壁 5min"],
+ ["虎丘","春秋","#991b1b","吴王阖闾葬地 · 苏州 2500 年建城史起点 · 苏轼「不游虎丘乃憾事」","剑池=阖闾墓未解之谜 · 云岩寺塔世界第二斜塔 · 南门进北门出"],
+ ["寒山寺","唐","#0e7490","因寒山·拾得名寺 · 「和合二仙」祖庭求姻缘灵 · 一首诗火 1200 年","西门进西门出 · 钟楼 ¥5/3 下 · 枫桥景区免费=张继夜泊现场"]
+];
+try{
+  var GMARK={"拙政园":'<span class="tag must">必</span>',"留园":'<span class="tag fix">荐</span>',"网师园":'<span class="tag fix">荐</span>',"虎丘":'<span class="tag must">必</span>',"寒山寺":'<span class="tag must">必</span>'};
+  el("gardens").innerHTML='<tr><th style="width:15%">园</th><th style="width:42px">朝</th><th style="width:38%">来历一句话</th><th>现场看什么</th></tr>'+
+  GARDENS.map(function(g){
+    return '<tr id="g-'+esc(g[0])+'"><td><b>'+esc(g[0])+'</b>'+(GMARK[g[0]]||"")+'</td><td><span class="tag" style="color:#fff;border-color:'+g[2]+';background:'+g[2]+'">'+esc(g[1])+'</span></td><td class="gstory">'+esc(g[3])+'</td><td>'+esc(g[4])+'</td></tr>';
+  }).join("");
+  document.querySelectorAll(".dseg").forEach(function(d){
+    d.addEventListener("click",function(){
+      var t=el(d.getAttribute("data-t"));if(t)t.scrollIntoView({behavior:"smooth",block:"center"});
+    });
+  });
+}catch(e){}
+
+/* ---------- 07b 名胜深读 ---------- */
+var SPOTS=[
+ {n:"虎丘",tag:'<span class="tag must">必</span>',id:"sd-虎丘",
+  meta:"¥60（11 月淡季价 · 旺季 ¥70）· 7:30–18:00（17:30 停入）· 主线 2h / 官方建议 3–4h · 山高仅 30m 不累",
+  rt:"南门进→北门出：头山门→断梁殿→憨憨泉→试剑石→真娘墓→千人石→剑池→云岩寺塔→万景山庄",
+  pts:[
+   "<b>剑池</b> ⭐ 全园核心——崖刻颜真卿「虎丘剑池」+王羲之「剑池」；池下是阖闾墓疑似入口，陪葬传说含三千宝剑；1955 年抽水发现墓门，怕伤塔基没敢挖，真·未解之谜",
+   "<b>云岩寺塔</b> ⭐ 世界第二斜塔——比比萨早 200 年、倾角更大，塔顶偏移 2.34m，砖木 1000 年不倒；⚠️ 仅开底层（入口预约）、塔内禁摄影",
+   "<b>断梁殿</b> 元代力学奇迹——主梁断成两截靠斗拱撑 600 年，苏州现存最老木构之一",
+   "<b>千人石</b> 倾斜巨磐，传说吴王在此灭口筑墓工匠，石色暗红",
+   "<b>试剑石</b> 阖闾（一说秦始皇）试剑劈石，中缝笔直"
+  ],
+  pay:"<b>实操</b>：打车 观前街→虎丘 ~¥18 / 地铁 6 号线虎丘站 3 口走 5min · 南门<b>免费讲解器</b> 8:00 起每整点发 20 台（顶门进正好首批）· 塔影桥 9:00 前拍塔倒影 · 剑池→塔段 200 级台阶穿运动鞋 · 北门出荒凉，坐 ¥10 电瓶车回南门或游 1 路去留园/山塘 · 讲解器收费档 ¥200/10 人可拼"},
+ {n:"寒山寺 + 枫桥",tag:'<span class="tag must">必</span>',id:"sd-寒山寺",
+  meta:"¥20 · 7:30–17:30（17:00 停入）· 寺内 1h + 枫桥 30min · 体量小、非对称格局",
+  rt:"西门进→西门出（别走东门）：「寒山寺」网红墙→四大天王殿（唯一上香点）→大雄宝殿→寒拾泉/闻钟亭→钟楼→和合祖庭→普明宝塔→观音峰→回西门→步行 5min 枫桥景区（免费）",
+  pts:[
+   "<b>张继《枫桥夜泊》实物现场</b> ⭐ 枫桥+京杭运河+钟声三元素全在——过桥对岸有张继夜泊雕像，「月落乌啼」机位在桥上",
+   "<b>和合祖庭</b> 寒山+拾得=民间「和合二仙」——这里求姻缘出名地灵",
+   "<b>钟楼敲钟 ¥5/3 下</b> 张继听的就是这口钟；除夕夜敲 108 下=消 108 种烦恼",
+   "<b>普明宝塔</b> 顺时针绕塔祈福 · 四周各大书法家《枫桥夜泊》碑刻廊 · 锦鲤投喂 ¥10",
+   "<b>抄经堂</b> 免费抄经 ~30min 写完可带走——冷门好体验，赶时间跳过"
+  ],
+  pay:"<b>自费速查</b>：寺内敲钟 ¥5/3 下 ✅｜寺外梵音阁大钟 ¥20/3 下（跳过）｜喂锦鲤 ¥10｜素斋观音面 ¥22（跳过，吃西园寺 ¥15）｜十八籽手串 ¥50（叫「请」）｜讲解器 ¥25（不必，寺小）｜门口拉客导游 ¥100+ 勿接 · <b>时机</b>：10:00–16:00 人流峰值 · 行李寄存：枫桥路 902 号 ~150m"}
+];
+try{
+  el("spots").innerHTML=SPOTS.map(function(s){
+    return '<div class="spot" id="'+s.id+'"><h3>'+esc(s.n)+' '+s.tag+'</h3><div class="meta">'+esc(s.meta)+'</div><div class="rt">'+esc(s.rt)+'</div><ul>'+s.pts.map(function(p){return '<li>'+p+'</li>';}).join("")+'</ul><div class="pay">'+s.pay+'</div></div>';
+  }).join("");
+}catch(e){}
+
+/* ---------- 05b eats（小红书帖提取） ---------- */
+var EATS=[
+ ["苏外婆·苏帮菜","平江路","松鼠桂鱼·手剥河虾仁·东坡肉","帖主自家店（软广属性）但人气真实 · 家常苏帮菜","慎"],
+ ["阊门姚记豆浆","阊门 · 山塘东口旁","咸豆浆·油条","24h 老牌早餐店 · 深夜食堂 · 城西线顺路","可"],
+ ["祥鑫饮食店","临顿路一带","卤鸡爪（软糯脱骨·苏式甜香）","老网红小吃店 · 平江路顺路","可"],
+ ["三万昌","连锁 · 平江路有店","碧螺知春","本地茶饮 · 茶味>奶香 · 顺路喝一杯","可"],
+ ["平江路支巷","钮家巷/萧家巷","—","帖主提示：主街定价偏高，支巷多本地人的店","查"]
+];
+try{
+  el("eats").innerHTML='<tr><th style="width:20%">店/位置</th><th style="width:20%">顺哪条线</th><th>招牌/提示</th><th style="width:30%">备注 · 来源标注</th></tr>'+
+  EATS.map(function(e){
+    var tc=e[4]==="可"?"ok":(e[4]==="慎"?"warn":"fix");
+    return '<tr><td><b>'+esc(e[0])+'</b></td><td>'+esc(e[1])+'</td><td>'+esc(e[2])+'</td><td><span class="tag '+tc+'">'+esc(e[4])+'</span> '+esc(e[3])+'</td></tr>';
+  }).join("");
+}catch(e){}
+
+/* ---------- 04 legs ---------- */
+var LEGS=[
+ ["城际 · 苏州↔乌镇↔杭州",[
+   ["苏州→乌镇","北广场景区直通车 ¥35–55 · 1.5h · 8 班/日（07:50–17:00）","推荐"],
+   ["乌镇→杭州","大巴 ¥35 · 1.5h / 桐乡站高铁 20min ¥17–30","推荐"],
+   ["苏州市内","地铁 1/4 号线为主 · 古城区打车 ¥15–35",""],
+   ["杭州→机场","地铁 19 号线直达 HGH ~30–40min","保底"]]],
+ ["回程航班 · 11/22 HGH→HKG（直飞龙虎榜）",[
+   ["国航 CA727","14:45 → 17:20","早回选项"],
+   ["国泰 CX961","15:55 → 18:35",""],
+   ["长龙 GJ8053","13:40 → 16:20",""],
+   ["最晚 ~19:35","→ 22:20 到港","已锁定"],
+   ["单程参考价","HK$650–800","估算"]]],
+ ["苏州↔杭州（若需跳站）",[
+   ["苏州站→杭州东","G 字 1.5h · 二等 ~¥133 · 150+ 班/日","推荐"],
+   ["苏州南→杭州西","最快 45min · ¥91 · 但两站皆远郊",""],
+   ["普速 K/T/Z","硬座 ¥40.5 · 3h+ · 不值",""]]]
+];
+try{
+  el("legs").innerHTML=LEGS.map(function(g){
+    return '<div class="box"><b class="k">'+esc(g[0])+'</b><table>'+g[1].map(function(r){
+      return '<tr><td class="num" style="width:34%">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td style="width:56px">'+(r[2]?'<span class="tag '+(r[2]==="推荐"||r[2]==="已锁定"?"ok":r[2]==="保底"?"fix":"")+'">'+esc(r[2])+'</span>':"")+'</td></tr>';
+    }).join("")+'</table></div>';
+  }).join('<div style="grid-column:1/-1;height:0"></div>');
+}catch(e){}
+
+/* ---------- 02 stays —— 随去程方案增减 11/18 晚 ---------- */
+var STAYS_D0={
+ 3:[["11/18 · 上海虹桥","机场边快捷酒店（步行到车站）","~¥300","Day 1 整天的成本"]],
+ 4:[["11/18 · 苏州观前街","当晚 ~20:30 已到 → 加住 1 晚","+¥200–350","或住无锡 ¥150–250"]],
+ 5:[["11/18 · 苏州观前街","~17:00 已到 → 加住 1 晚","+¥200–350","或住无锡玩鼋头渚"]],
+ 6:[["11/18 · 苏州观前街","~20:15 已到 → 加住 1 晚","+¥200–350","苏州南在吴江 +1h 接驳"]],
+ 7:[["11/18 · 动卧车上","G896 卧铺即住宿","¥0","已排除，留档"]]
+};
+var STAYS_BASE=[
+ ["苏州 · 观前街/平江路（11/19–20）","白玉兰（地铁口 20m，新）","¥200–350","经济首选"],
+ ["","全季观前街平江路店（苏式园林风 4.7 分）","¥350–500","均衡"],
+ ["","亚朵观前街","~¥500+","舒适"],
+ ["乌镇 · 西栅（11/21 周六）","景区外客栈（步行 5min）","¥250–400","省钱"],
+ ["","景区内官方民宿/酒店","¥600–1500","含联票+早茶客+托运"]];
+function renderStays(){
+  try{
+    var s=+(store.get(OBKEY)||-1);
+    var arr=((isFull(s)&&STAYS_D0[s])?STAYS_D0[s]:[]).concat(STAYS_BASE);
+    el("stays").innerHTML='<tr><th style="width:24%">住宿段</th><th>选择</th><th style="width:14%">价格/间</th><th style="width:24%">备注</th></tr>'+arr.map(function(r){
+      return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="num">'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>';
+    }).join("");
+  }catch(e){}
+}
+renderStays();
+
+/* ---------- 06 prep ---------- */
+var PREP=[
+ ["苏州博物馆预约（场次看去程）","公众号提前 7 天放号秒没——抢不到改去西馆（狮山·免预约）","!","https://www.szmuseum.com"],
+ ["决定去程并订机票","11/13 前定（苏博按这天抢号）","!","https://hk.trip.com/flights/"],
+ ["订回程机票 HGH→HKG ~19:35","国泰/国航/港航/长龙直飞 ~HK$650–800","!","https://hk.trip.com/flights/"],
+ ["乌镇 11/21 周六住宿","全程最贵一晚，越早越好","m","https://www.wuzhen.com.cn"],
+ ["苏州 11/19–20 两晚","周五有 +30% 加价，先锁","m",""],
+ ["拙政园分时票 7:30–9:30","「君到苏州」小程序/携程","m",""],
+ ["虹桥→苏州高铁 + 苏州→乌镇大巴票","12306 / 好行网，班次密，提前几天即可","","https://www.12306.cn"],
+ ["支付宝/微信支付绑卡 + 电子地铁码","大陆基本无现金；回乡证过 12306 实名","",""],
+ ["出发前 2–3 天复核天气","冷锋可能漂移，必要时调整顺序","",""]];
+try{
+  var done={}; try{done=JSON.parse(store.get("sz-prep2")||"{}")}catch(e){done={};}
+  function updProg(){
+    var n=0;for(var k in done)if(done[k])n++;
+    el("prepProg").textContent="已完成 "+n+" / "+PREP.length+(n===PREP.length?" ✓":"");
+  }
+  el("prep").innerHTML=PREP.map(function(t,i){
+    return '<label class="task'+(done[i]?" done":"")+'"><input type="checkbox" data-i="'+i+'"'+(done[i]?" checked":"")+'>'+
+      '<span class="tt">'+esc(t[0])+'<div class="twhy">'+esc(t[1])+'</div></span>'+
+      (t[3]?'<a class="lk" href="'+t[3]+'" target="_blank" rel="noopener">打开 ↗</a>':"")+
+      (t[2]==="!"?'<span class="tag urg">紧急</span>':t[2]==="m"?'<span class="tag warn">尽早</span>':"")+'</label>';
+  }).join("");
+  updProg();
+  el("prep").addEventListener("change",function(ev){
+    var cb=ev.target;if(cb.type!=="checkbox")return;
+    done[cb.getAttribute("data-i")]=cb.checked;
+    cb.closest(".task").classList.toggle("done",cb.checked);
+    store.set("sz-prep2",JSON.stringify(done));
+    updProg();
+  });
+}catch(e){}
+
+/* ---------- 07 places + copy ---------- */
+var PLACES=[
+ /* [name, price, note, type, must] */
+ ["拙政园","¥70","7:30 顶门进 · 四大名园之首","g",1],
+ ["苏州博物馆","免费","预约制 · 周一闭馆 · 贝聿铭","t",1],
+ ["苏州博物馆西馆","免费","保底 · 免预约 · 狮山 · 抢不到本馆来这","t",0],
+ ["狮子林","¥30","可选 · 假山迷宫 · 苏博隔壁","g",0],
+ ["留园","¥55","可选 · 四大名园 · 虎丘→山塘顺路","g",0],
+ ["西园寺","¥5","留园隔壁 5min · 素面 ¥15 解决午餐","t",0],
+ ["沧浪亭","¥20","可选 · 最古老+人最少 · 城南","g",0],
+ ["网师园","¥30–40","可选 · 城南 · 小巧精致","g",0],
+ ["可园","¥25","可选 · 沧浪亭正对面 · 10min","g",0],
+ ["艺圃","¥10","隐藏款 · 阊门内小巷","g",0],
+ ["怡园","¥15","观前街步行 5min · 碎片时间","g",0],
+ ["虎丘","¥60","云岩寺塔+剑池 · 城西","t",1],
+ ["寒山寺","¥20","姑苏城外寒山寺 · 枫桥","t",1],
+ ["七里山塘","免费","虎丘→阊门 · 夜景+游船 ¥50","s",0],
+ ["平江路","免费","古城水巷 · 夜游晚饭","s",0],
+ ["观前街","—","住宿区 · 商业中心","s",0],
+ ["乌镇西栅","¥150","9:00–22:00 · 夜景精华","w",1],
+ ["乌镇东栅","¥110","7:00–17:30 · 无夜景 · 可选","w",0],
+ ["苏州站","—","古城区北 · 北广场汽车站在此","x",0],
+ ["苏州北广场汽车站","—","乌镇直通车始发","x",0],
+ ["桐乡站","—","乌镇最近高铁站 · K282/打车 40min","x",0],
+ ["杭州东站","—","乌镇→杭州高铁到达 · 19 号线去机场","x",0],
+ ["杭州萧山国际机场","—","回程 · 地铁 19 号线直达","x",0],
+ ["断桥·白堤","免费","西湖快闪一段","h",0],
+ ["灵隐寺","¥75","可选 · 若 Day 4 时间够","h",0],
+ ["上海虹桥站","—","机场同栋 · 去程换乘点","x",0]];
+try{
+  var TC={g:"#16a34a",t:"#7c3aed",s:"#2563eb",x:"#64748b",w:"#d97706",h:"#0ea5e9"};
+  el("places").innerHTML='<tr><th>名称</th><th>票价</th><th>要点</th></tr>'+PLACES.map(function(p){
+    return '<tr><td><i class="tdot" style="background:'+(TC[p[3]]||"#999")+'"></i><b>'+esc(p[0])+'</b>'+(p[4]?'<span class="tag must">必</span>':"")+'<button class="cp" data-n="'+esc(p[0])+'">⧉</button></td><td class="num">'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';
+  }).join("");
+  el("places").addEventListener("click",function(ev){
+    var b=ev.target.closest(".cp");if(!b)return;
+    var txt=b.getAttribute("data-n");
+    function ok(){b.textContent="✓";b.classList.add("ok");setTimeout(function(){b.textContent="⧉";b.classList.remove("ok");},900);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,function(){fallback();});}else fallback();
+    function fallback(){var t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand("copy");ok();}catch(e){}document.body.removeChild(t);}
+  });
+}catch(e){}
+
+/* ---------- 11 budget —— 晚数随去程变化 ---------- */
+function renderBudget(){
+  try{
+    var s=+(store.get(OBKEY)||-1);
+    var BUDGET=[["去程机票","HK$800–1,500"],["回程机票","HK$650–800"],["住宿 ÷2（"+(isFull(s)?4:3)+" 晚）",isFull(s)?"~¥550–900":"~¥450–750"],
+     ["门票（拙70+虎60+寒20+西栅150）","~¥300"],["城际交通","~¥100"],["餐饮市内杂项","~¥400–600"],["合计","~HK$3,600–5,200"]];
+    el("budget").innerHTML=BUDGET.map(function(r,i){
+      return '<tr'+(i===BUDGET.length-1?' class="sel"':"")+'><td>'+esc(r[0])+'</td><td class="num" style="text-align:right">'+esc(r[1])+'</td></tr>';
+    }).join("");
+  }catch(e){}
+}
+renderBudget();
+
+/* ---------- M garden map ---------- */
+var PINS=[
+ /* [name, lat, lng, type, note] */
+ ["拙政园",31.3250,120.6325,"g","四大名园之首 · ¥70 · 顶门"],
+ ["苏州博物馆",31.3240,120.6320,"t","免费 · 预约制 · 周一闭馆"],
+ ["狮子林",31.3223,120.6330,"g","¥30 · 假山迷宫 · 苏博隔壁"],
+ ["怡园",31.3108,120.6275,"g","¥15 · 观前街步行 5min · 碎片时间"],
+ ["沧浪亭",31.3048,120.6278,"g","¥20 · 最古老+人最少"],
+ ["可园",31.3042,120.6270,"g","¥25 · 沧浪亭正对面"],
+ ["网师园",31.3018,120.6325,"g","¥30–40 · 小巧精致 · 城南"],
+ ["留园",31.3168,120.5870,"g","¥55 · 四大名园 · 城西"],
+ ["西园寺",31.3155,120.5840,"t","¥5 · 素面 · 留园隔壁"],
+ ["艺圃",31.3150,120.6120,"g","¥10 · 隐藏款 · 阊门小巷"],
+ ["虎丘",31.3400,120.5820,"t","¥60 · 云岩寺塔+剑池 · 西北角"],
+ ["寒山寺",31.3080,120.5720,"t","¥20 · 枫桥 · 城西偏南"],
+ ["七里山塘",31.3220,120.5960,"s","免费 · 夜景 · 虎丘→阊门一线"],
+ ["平江路",31.3160,120.6360,"s","免费 · 古城水巷"],
+ ["观前街",31.3110,120.6290,"s","住宿区"],
+ ["苏州站",31.3330,120.6230,"x","北广场汽车站=乌镇直通车始发"]
+];
+var RPINS=[
+ /* 全程路线 pin：苏州 → 乌镇 → 杭州 */
+ ["苏州站",31.3330,120.6230,"x","D3 直通车始发 · 北广场"],
+ ["乌镇西栅",30.7443,120.4918,"w","¥150 · 9:00–22:00 · 夜景精华 · 必"],
+ ["乌镇东栅",30.7572,120.5040,"w","¥110 · 7:00–17:30 · 可选"],
+ ["桐乡站",30.5410,120.5450,"x","乌镇最近高铁站 · K282/打车 ~40min"],
+ ["杭州东站",30.2917,120.2128,"h","乌镇→杭州到达 · 地铁 19 号线去机场"],
+ ["西湖·断桥",30.2620,120.1520,"h","Day 4 快闪段"],
+ ["灵隐寺",30.2425,120.0960,"h","¥75 · Day 4 备选"],
+ ["杭州萧山机场",30.2295,120.4344,"x","回程 19:35 → 香港 · 19 号线直达"],
+ ["上海虹桥",31.1970,121.3360,"x","去程换乘点（若选飞虹桥）"]
+];
+try{
+  if(window.L){
+    var cmap=L.map("gmap",{scrollWheelZoom:false}).setView([31.315,120.612],13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"&copy; OSM"}).addTo(cmap);
+    var CC={g:"#16a34a",t:"#7c3aed",s:"#2563eb",x:"#64748b",w:"#d97706",h:"#0ea5e9"};
+    var GSET={};GARDENS.forEach(function(g){GSET[g[0]]=1;});
+    var cityL=L.layerGroup(),routeL=L.layerGroup();
+    PINS.forEach(function(p){
+      L.circleMarker([p[1],p[2]],{radius:7,fillColor:CC[p[3]]||"#888",color:"#fff",weight:2,fillOpacity:.9})
+       .addTo(cityL).bindPopup("<b>"+p[0]+"</b><br>"+p[4]+(GSET[p[0]]?'<br><a href="#g-'+p[0]+'">→ 园林功课</a>':""));
+    });
+    RPINS.forEach(function(p){
+      L.circleMarker([p[1],p[2]],{radius:7,fillColor:CC[p[3]]||"#888",color:"#fff",weight:2,fillOpacity:.9})
+       .addTo(routeL).bindPopup("<b>"+p[0]+"</b><br>"+p[4]);
+    });
+    L.polyline([[31.3330,120.6230],[30.7443,120.4918],[30.2917,120.2128],[30.2295,120.4344]],{color:"#d97706",weight:2.5,dashArray:"6 6",opacity:.8}).addTo(routeL);
+    cityL.addTo(cmap);
+    document.querySelectorAll(".maptog button").forEach(function(b){
+      b.addEventListener("click",function(){
+        document.querySelectorAll(".maptog button").forEach(function(x){x.classList.remove("on");});
+        b.classList.add("on");
+        if(b.getAttribute("data-v")==="route"){
+          cmap.removeLayer(cityL);routeL.addTo(cmap);
+          cmap.flyToBounds([[31.3330,120.6230],[30.7443,120.4918],[30.2295,120.4344]],{padding:[24,24]});
+        }else{
+          cmap.removeLayer(routeL);cityL.addTo(cmap);
+          cmap.flyTo([31.315,120.612],13);
+        }
+      });
+    });
+  }
+}catch(e){}
+</script>
+</body>
+</html>
