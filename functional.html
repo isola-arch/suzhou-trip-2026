@@ -824,6 +824,7 @@ var RPINS=[
  ["浦东机场 PVG",31.1443,121.8080,"x","D1 落地 11:35 · 磁浮/2号线/联络线始发"],
  ["龙阳路(磁浮终点)",31.2085,121.5552,"x","磁浮 8min@430km/h · 换 2 号线"],
  ["南京东路站·寄存",31.2374,121.4798,"s","2号线 · 行李寄存点集中区 · 出站即南京路步行街"],
+ ["大白兔旗舰店",31.2364,121.4815,"f","南京东路409号 · 巨型兔雕塑 · 十几种口味散称~¥59/斤 · 文创+分子雪糕 · 奶茶店在371号 · 妈指定 🐰"],
  ["外滩",31.2400,121.4900,"s","万国建筑群 → 对岸陆家嘴 · 南京东路步行 ~10min"],
  ["豫园",31.2272,121.4922,"s","步行外滩 ~15min · 可加 · 10号线直达虹桥"],
  ["陆家嘴",31.2386,121.4998,"s","三件套脚下 · 2号线直达 · 备选快闪点"],
@@ -835,7 +836,7 @@ try{
   if(window.L){
     var cmap=L.map("gmap",{scrollWheelZoom:false}).setView([31.315,120.612],13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"&copy; OSM"}).addTo(cmap);
-    var CC={g:"#16a34a",t:"#7c3aed",s:"#2563eb",x:"#64748b",w:"#d97706",h:"#0ea5e9"};
+    var CC={g:"#16a34a",t:"#7c3aed",s:"#2563eb",x:"#64748b",w:"#d97706",h:"#0ea5e9",f:"#ec4899"};
     var GSET={};GARDENS.forEach(function(g){GSET[g[0]]=1;});
     var cityL=L.layerGroup(),routeL=L.layerGroup();
     PINS.forEach(function(p){
