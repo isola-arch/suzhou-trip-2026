@@ -188,7 +188,7 @@
 <div class="note">⚠ 避雷（商家号帖整理的常识项，已交叉验证可靠）：平江路/山塘街主街不买高价丝绸特产（溢价高，买老字号）· 门口拉客游船/一日游不选（坐船走官方码头）· 拙政园/苏博提前预约，现场基本无余票 · 汉服租赁查破损/配饰/还衣违约金 · 古城街巷窄，短途步行/共享单车比打车快</div>
 
 <h2 id="s06"><span class="n">06</span>地图 · 古城 / 全程<span class="hint">pin 约位 · 点 pin 看要点+跳功课 · 导航用 <a href="#s08">08 地名表</a></span></h2>
-<div class="maptog"><button class="on" data-v="city">苏州古城</button><button data-v="route">全程路线</button></div>
+<div class="maptog"><button class="on" data-v="city">苏州古城</button><button data-v="sh">上海 D1</button><button data-v="route">全程路线</button></div>
 <div id="gmap"></div>
 <div class="glegend"><span><i style="background:#16a34a"></i>园林</span><span><i style="background:#7c3aed"></i>寺·馆</span><span><i style="background:#2563eb"></i>街区/夜市</span><span><i style="background:#d97706"></i>水乡</span><span><i style="background:#0ea5e9"></i>杭州</span><span><i style="background:#64748b"></i>交通</span><span>· 滚轮缩放已关，双击缩放</span></div>
 
@@ -338,9 +338,9 @@ var OUTBOUND=[
   ["14:15–15:40",0,"外滩往南走 ~1.5km","中山东一路万国建筑群 · 可进和平饭店大堂/浦发大楼看穹顶壁画（免费）"],
   ["~15:50",1,"金陵东路渡口 ⛴ → 东昌路","¥2 单程 · 刷支付宝/微信乘车码 · ~15min/班 · 过江 10min"],
   ["16:00–16:40",0,"陆家嘴环形天桥","三件套仰拍机位 · 滨江大道回望万国建筑群全景 · 🐰东方明珠零米大厅有大白兔快乐乐园店"],
-  ["16:45",1,"陆家嘴站 2号线 → 虹桥 → 苏州","~50min 直达 · G字 25min → ~19:15 苏州"],
+  ["16:45",1,"陆家嘴站 2号线 → 南京东路下取行李 → 虹桥","1站下车取箱+续乘 ~+10min · 虹桥→G字 25min → ~19:30 苏州"],
   ["~19:15",0,"酒店 → 平江路晚饭","🏨 观前街 · 哑巴生煎/苏帮菜"]],
- note:"完整北→南单向扫外滩版：外白渡桥进→金陵东路渡江出，零回头。代价：舍弃豫园/沈丰记面。⚠️ 11月亮灯 ~18:00 看不到（16:45 走）——白天版反而人少+能看建筑内部穹顶，亮灯夜景留下次。死线：16:45 陆家嘴站上车。"}}
+ note:"完整北→南单向扫外滩版：外白渡桥进→金陵东路渡江出。代价：舍弃豫园/沈丰记面。⚠️ 行李在南京东路站——回程2号线正好路过，陆家嘴上车1站下车取箱续乘，+10min 不算绕路。⚠️ 11月亮灯 ~18:00 看不到——白天版反而人少+能看建筑内部穹顶，亮灯夜景留下次。死线：16:45 陆家嘴站上车。"}}
 ];
 function isFull(i){return OUTBOUND[i]&&OUTBOUND[i].full===1;}
 var OBKEY="sz-outbound2";
@@ -855,16 +855,31 @@ try{
     L.polyline([[31.2374,121.4798],[31.2400,121.4900],[31.2272,121.4922],[31.2374,121.4798]],{color:"#dc2626",weight:2,dashArray:"2 5",opacity:.9}).addTo(routeL);
     L.polyline([[31.2330,121.4960],[31.2320,121.5080]],{color:"#0e7490",weight:2,dashArray:"4 4",opacity:.9}).addTo(routeL);
     L.polyline([[31.2320,121.5080],[31.2397,121.4998]],{color:"#0e7490",weight:2,dashArray:"4 4",opacity:.9}).addTo(routeL);
+    /* 上海 D1 专属视图：上海段 pin + 全部动线 */
+    var shL=L.layerGroup();
+    RPINS.forEach(function(p){
+      if(p[2]>121.2){L.circleMarker([p[1],p[2]],{radius:7,fillColor:CC[p[3]]||"#888",color:"#fff",weight:2,fillOpacity:.9}).addTo(shL).bindPopup("<b>"+p[0]+"</b><br>"+p[4]);}
+    });
+    L.polyline([[31.1443,121.8080],[31.2085,121.5552],[31.2374,121.4798]],{color:"#2563eb",weight:2.5,dashArray:"6 6",opacity:.8}).addTo(shL);
+    L.polyline([[31.2374,121.4798],[31.1944,121.3210]],{color:"#2563eb",weight:2.5,dashArray:"6 6",opacity:.8}).addTo(shL);
+    L.polyline([[31.2374,121.4798],[31.2400,121.4900],[31.2272,121.4922],[31.2374,121.4798]],{color:"#dc2626",weight:2,dashArray:"2 5",opacity:.9}).addTo(shL);
+    L.polyline([[31.2330,121.4960],[31.2320,121.5080],[31.2397,121.4998]],{color:"#0e7490",weight:2,dashArray:"4 4",opacity:.9}).addTo(shL);
+    L.polyline([[31.2374,121.4798],[31.2450,121.4820],[31.2330,121.4960]],{color:"#dc2626",weight:2,dashArray:"2 5",opacity:.9}).addTo(shL);
     cityL.addTo(cmap);
     document.querySelectorAll(".maptog button").forEach(function(b){
       b.addEventListener("click",function(){
         document.querySelectorAll(".maptog button").forEach(function(x){x.classList.remove("on");});
         b.classList.add("on");
-        if(b.getAttribute("data-v")==="route"){
-          cmap.removeLayer(cityL);routeL.addTo(cmap);
+        var v=b.getAttribute("data-v");
+        cmap.removeLayer(cityL);cmap.removeLayer(routeL);cmap.removeLayer(shL);
+        if(v==="route"){
+          routeL.addTo(cmap);
           cmap.flyToBounds([[31.1443,121.8080],[30.7443,120.4918],[30.2295,120.4344]],{padding:[24,24]});
+        }else if(v==="sh"){
+          shL.addTo(cmap);
+          cmap.flyToBounds([[31.1555,121.3210],[31.2450,121.8080]],{padding:[24,24]});
         }else{
-          cmap.removeLayer(routeL);cityL.addTo(cmap);
+          cityL.addTo(cmap);
           cmap.flyTo([31.315,120.612],13);
         }
       });
