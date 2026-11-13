@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>行程編輯器 · 蘇州烏鎮 11/19–23</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Noto Sans TC',sans-serif;background:#f6f5f2}
+.card{background:#fff;border:1px solid #e5e2da;border-radius:10px;padding:8px 10px;cursor:grab;transition:box-shadow .15s,opacity .15s;user-select:none}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card.dragging{opacity:.4}
+.card .del{opacity:0;transition:opacity .1s}
+.card:hover .del{opacity:1}
+.col{min-height:120px;border-radius:12px;transition:background .15s,outline .15s}
+.col.over{background:#eef6ff;outline:2px dashed #93c5fd}
+.tslot{font-size:10px;color:#a8a29e;letter-spacing:.05em;text-transform:uppercase}
+.pool-card{cursor:grab}
+.pool-card:active{cursor:grabbing}
+.day-head{position:sticky;top:0;z-index:5}
+.badge{font-size:10px;padding:1px 6px;border-radius:99px}
+textarea.note{width:100%;font-size:12px;color:#78716c;background:transparent;border:none;resize:none;outline:none}
+</style>
+</head>
+<body class="p-4 md:p-6">
+<header class="max-w-[1400px] mx-auto mb-4 flex flex-wrap items-center gap-3">
+  <h1 class="text-xl font-black">行程編輯器 <span class="text-sm font-medium text-stone-500">11/19–23 · 2人（媽）</span></h1>
+  <div class="ml-auto flex gap-2">
+    <button onclick="copyPlan()" class="px-3 py-1.5 bg-stone-900 text-white rounded-lg text-sm hover:bg-stone-700">📋 複製文字版行程</button>
+    <button onclick="resetPlan()" class="px-3 py-1.5 bg-white border rounded-lg text-sm hover:bg-stone-50">↺ 重置</button>
+  </div>
+</header>
+<div class="max-w-[1400px] mx-auto grid grid-cols-[260px_1fr] gap-4">
+  <aside>
+    <h2 class="text-xs font-bold text-stone-400 mb-2 tracking-widest">候選池 · 拖進右邊某天</h2>
+    <div id="pool" class="space-y-4"></div>
+    <div class="mt-4">
+      <input id="customIn" placeholder="自訂項目（例如：藥方咖啡）" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
+      <button onclick="addToPool()" class="mt-1 w-full text-sm bg-white border rounded-lg py-1.5 hover:bg-stone-50">＋ 加到候選池</button>
+    </div>
+  </aside>
+  <main id="days" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-start"></main>
+</div>
+<div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-sm px-4 py-2 rounded-lg opacity-0 transition-opacity pointer-events-none">已複製</div>
+
+<script>
+// ===== 資料 =====
+// item: {t:時段, p:地點/事件, n:備註}
+const SEED_DAYS=[
+{h:"D1 · 11/19 四 · 香港→上海快閃→蘇州",items:[
+ {t:"08:55",p:"CX316 HKG→PVG",n:"11:35 到浦東"},
+ {t:"12:30",p:"磁浮+地鐵→南京東路站",n:"行李寄存（箱子放浦西側）"},
+ {t:"13:00",p:"大白兔旗艦店 409號",n:"散稱糖果+文創；奶茶店在371號 🐰"},
+ {t:"13:30",p:"外白渡橋→外灘源→中東一路",n:"北往南掃萬國建築群 ~1.5km · 可進和平飯店/浦發大堂"},
+ {t:"15:30",p:"金陵東路渡口 ¥2輪渡",n:"10min過江→東昌路→陸家嘴仰拍三件套"},
+ {t:"16:45",p:"陸家嘴2號線→南京東路取箱→虹橋",n:"1站下車取行李再續乘"},
+ {t:"18:30",p:"虹橋→蘇州站 G字",n:"~40min · 4號線直達樂橋酒店"}]},
+{h:"D2 · 11/20 五 · 古城核心",items:[
+ {t:"07:30",p:"拙政園",n:"¥80 · 頂門進避人潮"},
+ {t:"10:30",p:"蘇州博物館",n:"免費需預約 · 貝聿銘"},
+ {t:"午",p:"平江路午飯+慢逛",n:""},
+ {t:"下午",p:"獅子林 ¥30 或 耦園",n:""},
+ {t:"晚",p:"觀前街晚飯",n:""}]},
+{h:"D3 · 11/21 六 · 城西線 → 烏鎮",items:[
+ {t:"07:30",p:"虎丘",n:"¥60 · 南進北出 · 劍池+斜塔 · 萬景山莊秋景"},
+ {t:"上午",p:"寒山寺+楓橋",n:"¥20 · 敲鐘¥5"},
+ {t:"午",p:"西園寺素麵",n:"¥5門票 · 素麵¥15 · 滿院貓"},
+ {t:"下午",p:"留園",n:"¥55 · 紅楓當季 · 16:00前等金光穿廊"},
+ {t:"16:30",p:"出發烏鎮",n:"大巴/包車 ~1.5h → 西柵夜景"},
+ {t:"晚",p:"西柵夜景+入住",n:"景區內外二選一"}]},
+{h:"D4 · 11/22 日 · 烏鎮晨 → 賞秋 → 蘇州",items:[
+ {t:"07–09",p:"西柵清晨",n:"早茶客/晨景"},
+ {t:"10:00",p:"烏鎮→天平山",n:"包車 ~1h15min 行李跟車"},
+ {t:"11:15",p:"天平山紅楓",n:"¥30 · 南門→十景塘→古楓林環湖"},
+ {t:"15:15",p:"木瀆古鎮",n:"免大門票 · 山腳 ~10min"},
+ {t:"晚",p:"回蘇州續住（第三晚）",n:"不挪窩"}]},
+{h:"D5 · 11/23 一 · 蘇州→HGH→回港",items:[
+ {t:"上午",p:"道前街銀杏大道→文廟→可園",n:"免費街景 ~1.5h 老城銀杏線"},
+ {t:"13:30",p:"退房→蘇州站",n:""},
+ {t:"14–15",p:"G字→杭州東",n:"買蘇州站勿買蘇州北"},
+ {t:"16:00",p:"19號線→蕭山機場",n:"~25min"},
+ {t:"19:30",p:"CX963 HGH→HKG",n:"22:10 到港"}]}];
+
+const SEED_POOL={
+"賞秋/戶外":[
+ {t:"半天",p:"虎丘濕地公園",n:"免費 · 水上紅森林 · 全平木棧道 · 園區大坐電瓶車"},
+ {t:"半天",p:"天平山",n:"¥30 · 紅楓峰值 · 南門→十景塘→古楓林"},
+ {t:"2h",p:"道前街銀杏大道",n:"免費街景 · 串文廟+可園"},
+ {t:"半天",p:"太湖東山",n:"陸巷古村+採橘+湖鮮 · 跟烏鎮水鄉有重複"},
+ {t:"1h",p:"萬景山莊(虎丘內)",n:"虎丘秋景精華"}],
+"古城景點":[
+ {t:"2h",p:"網師園",n:"¥40 · 密度最高小園 · 夜遊限定"},
+ {t:"1.5h",p:"滄浪亭",n:"¥20 · 最古園林"},
+ {t:"1h",p:"可園",n:"¥25"},
+ {t:"2h",p:"藝圃",n:"¥10 · 本地人茶室"},
+ {t:"晚上",p:"山塘街夜景",n:"免費 · 搖櫓船~¥50"}],
+"上海":[
+ {t:"2h",p:"豫園+城隍廟",n:"¥40 · 只買正門基礎票"},
+ {t:"2h",p:"七寶古鎮",n:"虹橋旁 · 趕路版水鄉"},
+ {t:"1h",p:"武康大樓+武康路",n:"梧桐區街拍"},
+ {t:"30min",p:"大白兔旗艦店",n:"南京東路409號 · 媽指定"},
+ {t:"10min",p:"¥2輪渡 金陵東路→東昌路",n:"刷支付寶乘車碼"}],
+"吃":[
+ {t:"午",p:"西園寺素麵",n:"¥15 · 排隊快"},
+ {t:"午/晚",p:"松鶴樓/得月樓",n:"觀前街老字號 · 松鼠桂魚"},
+ {t:"小吃",p:"啞巴生煎",n:"臨頓路"},
+ {t:"小吃",p:"裕興記三蝦麵",n:"時令 · ~11月初尾季可能沒了"},
+ {t:"下午茶",p:"平江路雞腳旮旯/桂花糖粥",n:""}],
+"住宿候選":[
+ {t:"—",p:"全季·樂橋地鐵站店",n:"⭐ 出站<100m · ¥350–500"},
+ {t:"—",p:"亞朵S·觀前街平江路",n:"2026新 · ~¥500–700"},
+ {t:"—",p:"漫亭花園(桃花塢)",n:"園林體驗 · 可約接站 · ~¥700"},
+ {t:"—",p:"拙悅瀾庭(北寺塔)",n:"地鐵<100m但觀感不喜 · 降備選"},
+ {t:"—",p:"烏鎮景區內民宿",n:"¥600–1500 · 含聯票+早茶客"},
+ {t:"—",p:"烏鎮景區外客棧",n:"¥250–400 · 步行5min"}]};
+
+// ===== 狀態 =====
+let days,pool;
+function load(){
+ try{const s=JSON.parse(localStorage.getItem("szPlan"));if(s&&s.days){days=s.days;pool=s.pool||SEED_POOL;return}}catch(e){}
+ days=JSON.parse(JSON.stringify(SEED_DAYS));pool=JSON.parse(JSON.stringify(SEED_POOL));
+}
+function save(){localStorage.setItem("szPlan",JSON.stringify({days,pool}))}
+
+// ===== 渲染 =====
+const daysEl=document.getElementById("days"),poolEl=document.getElementById("pool");
+function cardHTML(it,di,ii){
+ return `<div class="card" draggable="true" data-d="${di}" data-i="${ii}">
+   <div class="flex items-start gap-1">
+     <div class="flex-1 min-w-0">
+       ${it.t?`<div class="tslot">${it.t}</div>`:""}
+       <div class="text-[13px] font-medium leading-tight">${it.p}</div>
+       <textarea class="note" rows="${it.n?(it.n.length>40?2:1):1}" placeholder="備註…" data-d="${di}" data-i="${ii}">${it.n||""}</textarea>
+     </div>
+     <button class="del text-stone-300 hover:text-red-500 px-1" data-d="${di}" data-i="${ii}" title="移除">✕</button>
+   </div></div>`;
+}
+function render(){
+ daysEl.innerHTML=days.map((d,di)=>`
+  <section class="col bg-stone-100/60 p-2 space-y-2" data-d="${di}">
+   <div class="day-head bg-stone-100/90 backdrop-blur rounded-lg px-2 py-1.5">
+     <div class="text-[11px] font-bold leading-snug">${d.h}</div>
+   </div>
+   ${d.items.map((it,ii)=>cardHTML(it,di,ii)).join("")}
+   <button class="w-full text-xs text-stone-400 hover:text-stone-700 border border-dashed rounded-lg py-1.5" onclick="addItem(${di})">＋ 加一項</button>
+  </section>`).join("");
+ poolEl.innerHTML=Object.entries(pool).map(([g,items])=>`
+  <div><div class="text-[11px] font-bold text-stone-500 mb-1">${g}</div>
+   <div class="space-y-1.5">${items.map((it,ii)=>`
+    <div class="card pool-card" draggable="true" data-g="${g}" data-i="${ii}">
+      <div class="flex items-start gap-1"><div class="flex-1">
+        <span class="badge bg-sky-100 text-sky-700">${it.t}</span>
+        <span class="text-[13px] font-medium">${it.p}</span>
+        <div class="text-[11px] text-stone-500 leading-snug mt-0.5">${it.n||""}</div>
+      </div><button class="del text-stone-300 hover:text-red-500 px-1" data-gdel="${g}" data-i="${ii}">✕</button></div>
+    </div>`).join("")}</div></div>`).join("");
+}
+
+// ===== 拖放 =====
+let drag=null;
+document.addEventListener("dragstart",e=>{
+ const c=e.target.closest(".card");if(!c)return;
+ c.classList.add("dragging");
+ drag=c.dataset.g!==undefined?{from:"pool",g:c.dataset.g,i:+c.dataset.i}:{from:"day",d:+c.dataset.d,i:+c.dataset.i};
+});
+document.addEventListener("dragend",e=>{e.target.closest(".card")?.classList.remove("dragging");drag=null;
+ document.querySelectorAll(".col.over,.card.over").forEach(x=>x.classList.remove("over"))});
+document.addEventListener("dragover",e=>{
+ const col=e.target.closest(".col");const card=e.target.closest(".card");
+ if(col||card){e.preventDefault();
+  document.querySelectorAll(".col.over,.card.over").forEach(x=>x.classList.remove("over"));
+  (card||col).classList.add("over")}
+});
+document.addEventListener("drop",e=>{
+ const col=e.target.closest(".col");const card=e.target.closest(".card");
+ if(!col&&!card)return;e.preventDefault();if(!drag)return;
+ let dd,idx;
+ if(card&&card.dataset.d!==undefined){dd=+card.dataset.d;idx=+card.dataset.i}
+ else{dd=+col.dataset.d;idx=days[dd].items.length}
+ let it;
+ if(drag.from==="pool"){it=JSON.parse(JSON.stringify(pool[drag.g][drag.i]))}
+ else{it=days[drag.d].items.splice(drag.i,1)[0];if(drag.d===dd&&drag.i<idx)idx--}
+ days[dd].items.splice(idx,0,it);save();render();
+});
+// 拖回候選池=移除（拖到中間縫隙丟棄不算，只處理拖到天欄）
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button.del");if(!b)return;
+ if(b.dataset.gdel!==undefined){pool[b.dataset.gdel].splice(+b.dataset.i,1)}
+ else{days[+b.dataset.d].items.splice(+b.dataset.i,1)}
+ save();render();
+});
+document.addEventListener("input",e=>{
+ if(e.target.classList.contains("note")){days[+e.target.dataset.d].items[+e.target.dataset.i].n=e.target.value;save()}
+});
+// textarea 不要觸發拖曳
+document.addEventListener("mousedown",e=>{if(e.target.tagName==="TEXTAREA")e.target.closest(".card").draggable=false});
+document.addEventListener("mouseup",()=>{document.querySelectorAll(".card").forEach(c=>c.draggable=true)});
+
+function addItem(di){
+ const p=prompt("項目名稱（例如：藝圃喝茶）");if(!p)return;
+ const t=prompt("時段（可留空，如：下午）")||"";
+ days[di].items.push({t,p,n:""});save();render();
+}
+function addToPool(){
+ const v=document.getElementById("customIn").value.trim();if(!v)return;
+ if(!pool["自訂"])pool["自訂"]=[];
+ pool["自訂"].push({t:"自訂",p:v,n:""});
+ document.getElementById("customIn").value="";save();render();
+}
+function resetPlan(){if(confirm("重置回原始行程？自訂的更動都會消失。")){localStorage.removeItem("szPlan");load();render()}}
+function copyPlan(){
+ let out="蘇州烏鎮 5日行程（11/19–23）\n"+"=".repeat(28)+"\n";
+ days.forEach(d=>{out+="\n"+d.h+"\n";d.items.forEach(it=>{out+=`  ${it.t?it.t+" · ":""}${it.p}${it.n?" — "+it.n:""}\n`})});
+ navigator.clipboard.writeText(out).then(()=>{
+  const t=document.getElementById("toast");t.style.opacity=1;setTimeout(()=>t.style.opacity=0,1500)});
+}
+
+load();render();
+</script>
+</body>
+</html>
