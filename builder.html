@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>行程 Builder · 資料驅動版</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  *{margin:0;box-sizing:border-box}
+  body{background:#0f0f10;color:#e8e6e1;font:14px/1.6 -apple-system,"Segoe UI","Microsoft JhengHei","PingFang TC",sans-serif}
+  .leaflet-container{background:#1a1c1e}
+  .leaflet-control-attribution{background:rgba(15,15,16,.7)!important;font-size:9px!important}
+  .leaflet-control-attribution a{color:#6a6862!important}
+  .topbar{position:sticky;top:0;z-index:800;background:rgba(15,15,16,.95);backdrop-filter:blur(8px);
+          padding:12px 18px;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px}
+  .logo{font-weight:800;font-size:16px;letter-spacing:-.02em}
+  .logo em{color:#e8764f;font-style:normal}
+  .linkbox{flex:1;display:flex;gap:8px;max-width:520px}
+  .linkbox input{flex:1;background:#191a1c;border:1px solid #333;color:#e8e6e1;border-radius:10px;
+                 padding:9px 12px;font-size:13px;outline:none}
+  .linkbox input:focus{border-color:#e8764f}
+  .linkbox button{background:#e8764f;color:#fff;border:0;border-radius:10px;padding:9px 16px;
+                  font-weight:700;cursor:pointer;font-size:13px}
+  .layout{display:grid;grid-template-columns:1fr 430px;gap:0;min-height:calc(100vh - 54px)}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}.planpanel{position:fixed!important;
+    right:0;top:54px;bottom:0;width:min(430px,94vw);transform:translateX(100%);transition:.3s}
+    .planpanel.open{transform:none;box-shadow:-8px 0 30px rgba(0,0,0,.6)}}
+  .main{padding:18px 20px 80px;overflow-y:auto}
+  .planpanel{border-left:1px solid #222;background:#121213;padding:16px;overflow-y:auto;
+             position:relative;z-index:700}
+  @media(max-width:900px){.planpanel{background:#131315}}
+  .sec-title{font-size:10px;letter-spacing:.14em;color:#6a6862;text-transform:uppercase;margin:20px 0 10px}
+  .sec-title:first-child{margin-top:0}
+  .notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .notecard{background:#191a1c;border:1px solid #333;border-radius:10px;overflow:hidden;cursor:pointer;
+            transition:.15s;position:relative}
+  .notecard:hover{border-color:#555}
+  .notecard .nimg{width:100%;height:60px;display:flex;align-items:center;justify-content:center;
+            font-size:22px;font-weight:800;color:rgba(255,255,255,.85)}
+  .notecard .nbody{padding:8px 10px}
+  .notecard .ntitle{font-size:12px;font-weight:600;line-height:1.35}
+  .notecard .nmeta{font-size:10.5px;color:#9a978f;margin-top:3px}
+  .notecard .count{position:absolute;top:6px;right:6px;background:rgba(15,15,16,.85);border:1px solid #444;
+                   border-radius:10px;font-size:10px;padding:2px 7px;color:#d8d5cd}
+  .notecard.sel{border-color:#e8764f;box-shadow:0 0 0 2px rgba(232,118,79,.25)}
+  .notecard .bundleadd{margin:0 10px 10px;width:calc(100% - 20px);background:#241c16;border:1px solid #4a3f28;
+           color:#e8b44f;border-radius:8px;padding:5px;font-size:10.5px;font-weight:700;cursor:pointer}
+  .notecard .bundleadd:hover{background:#e8b44f;color:#111}
+  .notecard .bundleadd.in{background:#2a3d2a;color:#9fe6a0;border-color:#3f5f3f}
+  .places{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+  .place{background:#191a1c;border:1px solid #333;border-radius:10px;padding:10px 12px;position:relative;transition:.15s}
+  .place:hover{border-color:#555}
+  .place .pname{font-weight:700;font-size:13px}
+  .place .ptype{font-size:10px;color:#e8b44f;letter-spacing:.08em}
+  .place .psrc{font-size:10.5px;color:#9a978f;margin-top:4px}
+  .place .psrc b{color:#d8d5cd;font-weight:600}
+  .place .add{position:absolute;top:9px;right:9px;width:24px;height:24px;border-radius:50%;
+              background:#e8b44f;color:#111;border:0;font-size:15px;font-weight:800;line-height:1;
+              cursor:pointer;transition:.15s}
+  .place .add:hover{transform:scale(1.15)}
+  .place .add.in{background:#2a3d2a;color:#9fe6a0}
+  .place.dim{opacity:.4}
+  .libmap{height:240px;border-radius:12px;border:1px solid #333;margin-top:10px}
+  .num-pin{background:#e8764f;color:#fff;border:2px solid #fff;border-radius:50%;width:24px!important;
+           height:24px!important;font:700 11px/20px sans-serif;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .planname{font-size:15px;font-weight:700;border-bottom:1px dashed #333;padding-bottom:8px}
+  .planname input{background:none;border:0;color:#e8e6e1;font:inherit;width:100%;outline:none}
+  .plansum{font-size:11px;color:#9a978f;margin:6px 0 4px}
+  .planbtns{display:flex;gap:6px;margin:8px 0 0}
+  .planbtns button{flex:1;background:#191a1c;border:1px solid #333;color:#9a978f;font-size:10.5px;
+                   border-radius:7px;padding:5px;cursor:pointer}
+  .planbtns button:hover{border-color:#e8764f;color:#e8764f}
+  .daysec{margin-top:16px}
+  .dayhdr{display:flex;align-items:baseline;gap:8px;font-weight:800;font-size:12.5px;color:#e8764f;letter-spacing:.04em}
+  .dayhdr .dname{color:#d8d5cd;font-weight:600;letter-spacing:0}
+  .dayhdr .dcap{margin-left:auto;font:600 10.5px "SF Mono",Consolas,monospace;color:#9a978f;letter-spacing:0}
+  .dayhdr .dcap.over{color:#ff9a7a}
+  .daywarn{font-size:10.5px;color:#ff9a7a;background:#2a1c16;border:1px dashed #6f4a3f;border-radius:8px;
+           padding:5px 9px;margin-top:6px}
+  .dayline{height:1px;background:#3a2f24;margin-top:6px}
+  .pstop{display:flex;gap:8px;align-items:flex-start;margin-top:10px}
+  .pstop .spine{display:flex;flex-direction:column;align-items:center;width:30px;flex:none}
+  .tarr{font-family:'SF Mono',Menlo,Consolas,monospace;font-size:9px;color:#7d7a72;
+        margin-top:5px;white-space:nowrap}
+  .pstop .body{flex:1;background:#191a1c;border:1px solid #2a2a26;border-radius:8px;padding:8px 10px;font-size:12.5px}
+  .pstop .body .pm{font-size:10px;color:#9a978f;margin-top:2px}
+  .pstop .del{float:right;color:#6a6862;cursor:pointer;border:0;background:none;font-size:13px}
+  .pstop .del:hover{color:#e8764f}
+  .tip{font-size:11px;color:#9a978f;font-style:italic;margin-top:4px;line-height:1.45;cursor:pointer}
+  .tip:hover{color:#d8d5cd}
+  .tip b{color:#e8b44f;font-style:normal;font-weight:600}
+  .est{display:inline-block;font-size:9px;background:#241f16;color:#e8b44f;border:1px solid #4a3f28;
+       border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px}
+  .leg{display:flex;gap:8px;align-items:stretch;margin:2px 0 0 19px}
+  .leg .lspine{width:30px;flex:none;display:flex;flex-direction:column;align-items:center}
+  .leg .lrail{width:1px;flex:1;min-height:7px;background:#2a2a26}
+  .leg .ltim{font-family:'SF Mono',Menlo,Consolas,monospace;font-size:9px;color:#55534e;
+             padding:2px 0;white-space:nowrap}
+  .leg .lbody{flex:1;display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:4px 0}
+  .leg .lchip{background:none;border:1px solid #2a2a26;color:#7d7a72;font-size:9.5px;
+              font-family:'SF Mono',Menlo,Consolas,monospace;border-radius:6px;
+              padding:2px 7px;cursor:pointer;white-space:nowrap}
+  .leg .lchip:hover{border-color:#55534e;color:#9a978f}
+  .leg .lchip.sel{border-color:#e8764f;color:#e8b44f;background:#1c1613}
+  .leg .lest{font-size:9px;color:#55534e}
+  .bundle{margin-top:10px;border:1px solid #4a3f28;border-radius:10px;overflow:hidden}
+  .bhdr{display:flex;align-items:center;gap:8px;background:#241c16;padding:9px 11px;cursor:pointer;user-select:none}
+  .bhdr:hover{background:#2a211a}
+  .bhdr .chev{color:#e8b44f;font-size:11px;width:12px;flex:none;transition:transform .2s}
+  .bundle.open .bhdr .chev{transform:rotate(90deg)}
+  .bhdr .btag{font-size:9px;background:#e8b44f;color:#111;font-weight:800;border-radius:4px;padding:1px 5px;letter-spacing:.06em}
+  .bhdr .btitle{flex:1;font-size:12px;font-weight:700;line-height:1.3}
+  .bhdr .bmeta{font-size:10px;color:#9a978f;white-space:nowrap}
+  .bbody{border-top:1px solid #3a2f24;padding:8px 10px 10px;background:#151312}
+  .bseg{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
+  .bseg .sbody{flex:1;background:#191a1c;border:1px solid #2a2a26;border-radius:7px;padding:6px 9px;font-size:12px}
+  .bseg.removed .sbody{opacity:.45}
+  .bseg.removed .sname{text-decoration:line-through}
+  .bseg .rmtag{font-size:8.5px;color:#ff9a7a;border:1px solid #6f4a3f;border-radius:4px;padding:0 4px;margin-left:4px}
+  .bseg .x{color:#6a6862;cursor:pointer;border:0;background:none;font-size:12px;padding:2px}
+  .bseg .x:hover{color:#e8764f}
+  .bseg.custom .sbody{border-style:dashed;color:#e8b44f}
+  .bins{border:none;border-top:1px dashed #2a2a26;border-radius:0;height:9px;margin-top:2px;
+        cursor:pointer;position:relative;font-size:9px}
+  .bins::before{content:'＋';position:absolute;left:50%;top:-6px;transform:translateX(-50%);
+        background:#151312;padding:0 6px;color:#55534e;opacity:.5}
+  .bins:hover{border-top-color:#e8b44f}
+  .bins:hover::before{opacity:1;color:#e8b44f}
+  .bins.wide{border:1px dashed #333;border-radius:6px;height:auto;padding:5px;margin-top:8px;
+        text-align:center;font-size:10.5px;color:#6a6862}
+  .bins.wide::before{display:none}
+  .bins.wide:hover{border-color:#e8b44f;color:#e8b44f}
+  .bfoot{display:flex;gap:8px;margin-top:10px}
+  .bfoot button{flex:1;background:none;border:1px solid #333;color:#9a978f;border-radius:7px;
+                font-size:10.5px;padding:5px;cursor:pointer}
+  .bfoot button:hover{border-color:#e8b44f;color:#e8b44f}
+  .updn{display:flex;flex-direction:column;gap:2px;flex:none;margin-top:2px}
+  .updn button{background:none;border:1px solid #333;color:#9a978f;border-radius:5px;font-size:9px;
+               width:16px;height:13px;cursor:pointer;line-height:1;padding:0}
+  .updn button:hover{border-color:#e8764f;color:#e8764f}
+  .offerbar{background:linear-gradient(135deg,#241c16,#191a1c);border:1px solid #4a3f28;border-radius:10px;
+            padding:10px 12px;margin:14px 0 0;display:flex;align-items:center;gap:10px}
+  .vtog{display:flex;gap:4px;margin:2px 0 8px}
+  .vtog button{flex:1;background:#191a1c;border:1px solid #333;color:#9a978f;font-size:10.5px;
+               border-radius:7px;padding:5px;cursor:pointer}
+  .vtog button.sel{background:#e8764f;color:#fff;border-color:#e8764f}
+  .cal{position:relative;margin:10px 0 0 46px;border-left:1px solid #333}
+  .calgrid{position:absolute;left:0;right:0;border-top:1px dashed #2a2a26}
+  .calgrid span{position:absolute;left:-46px;top:-6px;font-size:9px;color:#55534e;
+                font-family:'SF Mono',Menlo,monospace}
+  .caldays{display:flex;gap:10px;align-items:flex-start;overflow-x:auto}
+  .caldays .daysec{flex:0 0 210px}
+  .calb{position:absolute;left:8px;right:6px;background:#1c2126;border:1px solid #33506b;
+        border-radius:6px;padding:3px 7px;font-size:11px;overflow:hidden;
+        cursor:grab;touch-action:none;user-select:none}
+  .calb.dragging{opacity:.6;z-index:6;box-shadow:0 6px 20px rgba(0,0,0,.55);cursor:grabbing}
+  .calb .calrsz{position:absolute;left:0;right:0;bottom:0;height:8px;cursor:ns-resize}
+  .calb .calrsz::after{content:'';display:block;width:22px;height:3px;border-radius:2px;
+        background:#3a4a5a;margin:3px auto 0}
+  .calins{position:absolute;left:0;right:0;border-top:2px solid #e8b44f;z-index:5;pointer-events:none}
+  .calb b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .calb span{font-size:9px;color:#9a978f}
+  .calb.inb{background:#241c16;border-color:#4a3f28}
+  .calb.custom{background:#1a1a14;border-style:dashed;border-color:#4a4a28;color:#e8b44f}
+  .durmod{color:#e8b44f}
+  .grip{cursor:grab;touch-action:none;color:#4a4842;font-size:13px;padding:2px 3px;
+        flex:none;align-self:center;user-select:none;line-height:1}
+  .grip:hover{color:#9a978f}
+  .grip:active{cursor:grabbing}
+  .dragging{pointer-events:none}
+  .pstop.dragging,.bseg.dragging,.bundle.dragging{opacity:.55}
+  .insline{height:2px;background:#e8b44f;border-radius:1px;margin:4px 2px}
+  .calleg{position:absolute;left:16px;width:10px;
+          background:repeating-linear-gradient(45deg,#2a2a26 0,#2a2a26 3px,transparent 3px,transparent 6px);
+          border-left:1px solid #3a3a36}
+  .calleg span{position:absolute;left:14px;top:50%;transform:translateY(-50%);
+               font-size:9px;color:#6a6862;white-space:nowrap}
+  .calmark{position:absolute;left:0;right:0;border-top:1px solid #7a3a2a;z-index:2}
+  .calmark span{position:absolute;right:4px;top:-7px;font-size:9px;color:#ff9a7a;
+                background:#111;padding:0 4px}
+  .calmark.dayend{border-top-color:#4a4a46}
+  .calmark.dayend span{color:#9a978f}
+  .calnote{font-size:10px;color:#55534e;margin:8px 0 0;font-style:italic}
+  .offerbar .otxt{flex:1;font-size:11.5px;color:#d8d5cd;line-height:1.5}
+  .offerbar button{background:#e8764f;color:#fff;border:0;border-radius:8px;padding:7px 12px;
+                   font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .offerbar .naa{background:none;color:#9a978f;border:1px solid #444}
+  .emptyplan{text-align:center;padding:44px 10px;color:#6a6862}
+  .emptyplan .big{font-size:26px;opacity:.4}
+  .emptyplan p{font-size:12px;margin-top:8px;line-height:1.7}
+  .unlockhint{font-size:10px;color:#6a6862;margin-top:12px;text-align:center}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);background:#2a3d2a;border:1px solid #6fbf73;
+         color:#9fe6a0;padding:9px 18px;border-radius:20px;font-size:13px;opacity:0;transition:.3s;z-index:999}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @keyframes flycard{0%{transform:scale(1);opacity:1}100%{transform:scale(.3) translate(60vw,-40vh);opacity:0}}
+  .flyghost{position:fixed;z-index:998;pointer-events:none;background:#191a1c;border:1px solid #e8764f;
+            border-radius:10px;padding:10px 12px;font-size:12px;font-weight:700}
+  .mobileplanbtn{display:none;position:fixed;bottom:16px;right:16px;z-index:750;background:#e8764f;color:#fff;
+                 border:0;border-radius:24px;padding:12px 18px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+  @media(max-width:900px){.mobileplanbtn{display:block}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">sapio<em>.</em></div>
+  <div class="linkbox">
+    <input id="linkin" placeholder="貼 reel / TikTok / 小紅書 link（提取功能待接後端）">
+    <button onclick="simExtract()">提取</button>
+  </div>
+</div>
+<div class="layout">
+  <div class="main">
+    <div class="sec-title">來源 notes — 點卡 filter，或「整條加入」做 bundle</div>
+    <div class="notes" id="notes"></div>
+    <div class="sec-title">Places pool — 點 + 加入行程</div>
+    <div class="places" id="places"></div>
+    <div class="sec-title">地圖</div>
+    <div class="libmap" id="libmap"></div>
+  </div>
+  <div class="planpanel" id="planpanel">
+    <div class="planname"><input id="tripname"></div>
+    <div class="plansum" id="plansum">0 站</div>
+    <div class="planbtns">
+      <button onclick="copyPlan()">📋 複製文字版</button>
+      <button onclick="resetPlan()">↺ 重置回基準</button>
+    </div>
+    <div id="planlist"></div>
+  </div>
+</div>
+<button class="mobileplanbtn" onclick="document.getElementById('planpanel').classList.toggle('open')">🗺 行程 <span id="mbadge"></span></button>
+<div class="toast" id="toast"></div>
+
+<script src="trip-suzhou.js"></script>
+<script>
+const NOTES=TRIP.notes,PLACES=TRIP.places;
+const LAST_TRANSIT=TRIP.lastTransit||{},LAST_TRANSIT_MIN=TRIP.lastTransitMin||{};
+const DAY_START=TRIP.dayStart,DAY_END=TRIP.dayEnd,DAY_CAP_H=TRIP.dayCapH,CUR=TRIP.currency||'¥';
+const TRANS={walk:'🚶',transit:'🚇',drive:'🚗',rail:'🚄'};
+const LSKEY='szBuilder.'+location.pathname;
+
+let days=[],selNote=null,editHint=false,declinedCluster=false,planView='list';
+const durOv={},legOverride={};
+function durOf(pid){return durOv[pid]||PLACES[pid].durH;}
+function segDurH(s){return s.custom?s.durH:durOf(s.pid);}
+
+function save(){try{localStorage.setItem(LSKEY,JSON.stringify({days,durOv,legOverride,
+  name:document.getElementById('tripname').value}))}catch(e){}}
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(LSKEY));
+    if(s&&s.days){days=s.days;Object.assign(durOv,s.durOv||{});Object.assign(legOverride,s.legOverride||{});
+      if(s.name)document.getElementById('tripname').value=s.name;return}}catch(e){}
+  days=JSON.parse(JSON.stringify(TRIP.seedDays)).map(d=>({label:d.label,items:d.items}));
+}
+document.getElementById('tripname').value=TRIP.name;
+load();
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);}
+function icon(n){return L.divIcon({className:'',html:'<div class="num-pin">'+n+'</div>',iconSize:[24,24],iconAnchor:[12,12]});}
+function havKm(a,b){const R=6371,r=Math.PI/180,dLa=(b[0]-a[0])*r,dLo=(b[1]-a[1])*r;
+  const x=Math.sin(dLa/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));}
+function fm(min){return min>=60?(Math.round(min/30)*0.5).toFixed(1).replace('.0','')+'h':min+'分';}
+function legEst(aPid,bPid){
+  const key=aPid+'>'+bPid,ov=legOverride[key]||legOverride[bPid+'>'+aPid];
+  const d=havKm(PLACES[aPid].ll,PLACES[bPid].ll);
+  const calc={walk:{min:Math.max(5,Math.round(d*15/5)*5),yen:0},
+              transit:{min:Math.max(10,Math.round((d*1.9+12)/5)*5),yen:Math.max(3,Math.round(d*0.7))},
+              drive:{min:Math.max(8,Math.round(d*1.3+6)),yen:Math.round((d*2.6+10)/5)*5},
+              rail:{min:Math.max(30,Math.round(d*0.85+20)),yen:Math.max(20,Math.round(d*0.55/5)*5)}};
+  const mode=ov||(d<1.5?'walk':d<28?'transit':'rail');
+  const c=calc[mode];
+  return{mode,min:c.min,yen:c.yen,dist:d,key,calc};
+}
+function flatDay(day){
+  const out=[];
+  day.items.forEach((it,iti)=>{
+    if(it.k==='p')out.push({pid:it.pid,it:iti});
+    else if(it.k==='c')out.push({custom:it.name,durH:it.durH||1,it:iti});
+    else bundleSegs(it).forEach(s=>out.push(s.custom
+      ?{custom:s.custom,durH:s.durH||1,inB:1,it:iti,oi:s.oi,insIdx:s.insIdx}
+      :{pid:s.pid,inB:1,it:iti,oi:s.oi}));
+  });
+  return out;
+}
+function dayTimeline(day){
+  const f=flatDay(day);let t=DAY_START;const out=[];
+  f.forEach((s,i)=>{
+    const durMin=Math.round(segDurH(s)*60);
+    out.push({s,arr:t,durMin,legAfter:0});
+    t+=durMin;
+    if(i<f.length-1){
+      const nxt=f[i+1];
+      const leg=(s.pid&&nxt.pid)?legEst(s.pid,nxt.pid).min:20;
+      out[i].legAfter=leg;t+=leg;
+    }
+  });
+  return out;
+}
+function clk(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function notePids(nid){
+  return Object.keys(PLACES).filter(pid=>PLACES[pid].note===nid)
+    .sort((a,b)=>PLACES[a].reelIdx-PLACES[b].reelIdx);
+}
+function bundleSegs(b){
+  if(!b.ord)b.ord=notePids(b.nid).map(p=>'p:'+p);
+  const segs=[];
+  b.ord.forEach((t,oi)=>{
+    if(t.startsWith('p:')){
+      const pid=t.slice(2);
+      if(!b.rm.includes(pid))segs.push({pid,oi});
+    }else{
+      const c=b.ins[+t.slice(2)];
+      if(c&&c.name)segs.push({custom:c.name,durH:c.durH||1,insIdx:+t.slice(2),oi});
+    }
+  });
+  return segs;
+}
+function bundleReordered(b){
+  return b.ord.filter(t=>t.startsWith('p:')).map(t=>t.slice(2)).join(',')
+    !==notePids(b.nid).join(',');
+}
+function moveSeg(d,i,si,dir){
+  const b=getBundle(d,i);if(!b)return;
+  const segs=bundleSegs(b),a=segs[si],z=segs[si+dir];
+  if(!a||!z)return;
+  [b.ord[a.oi],b.ord[z.oi]]=[b.ord[z.oi],b.ord[a.oi]];
+  renderAll();
+}
+function allStopsCount(){return days.reduce((n,d)=>n+flatDay(d).length,0);}
+function dayHours(day){
+  const f=flatDay(day);let h=0;
+  f.forEach((s,i)=>{
+    h+=segDurH(s);
+    if(i<f.length-1&&s.pid&&f[i+1].pid)h+=legEst(s.pid,f[i+1].pid).min/60;
+    else if(i<f.length-1)h+=0.33;
+  });
+  return h;
+}
+function dayCost(day){return flatDay(day).reduce((n,s)=>n+(s.pid?PLACES[s.pid].costY:0),0);}
+function dayArea(day){
+  const w={};
+  flatDay(day).forEach(s=>{if(s.pid)w[PLACES[s.pid].area]=(w[PLACES[s.pid].area]||0)+durOf(s.pid);});
+  const e=Object.entries(w).sort((a,b)=>b[1]-a[1]);
+  return e.length?e[0][0]:null;
+}
+function dayName(day){
+  const a=dayArea(day);if(!a)return null;
+  return flatDay(day).filter(s=>s.pid).length>=2?a+'一帶':a;
+}
+function stopInPlan(pid){return days.some(d=>flatDay(d).some(s=>s.pid===pid));}
+function bundleInPlan(nid){return days.some(d=>d.items.some(i=>i.k==='b'&&i.nid===nid));}
+
+const NCOL=['#3b4a5a','#4a3b5a','#5a4a3b','#3b5a4a','#5a3b3b','#3b545a'];
+function renderNotes(){
+  document.getElementById('notes').innerHTML=NOTES.map((n,ni)=>{
+    const np=Object.values(PLACES).filter(p=>p.note===n.id).length;
+    const inb=bundleInPlan(n.id);
+    return `<div class="notecard ${selNote===n.id?'sel':''}" onclick="toggleNote('${n.id}')">
+      ${n.img?`<img class="nimg" style="object-fit:cover" src="${n.img}">`
+        :`<div class="nimg" style="background:linear-gradient(135deg,${NCOL[ni%NCOL.length]},#191a1c)">${n.title[0]}</div>`}
+      <span class="count">${np} 地點</span>
+      <div class="nbody"><div class="ntitle">${n.title}</div><div class="nmeta">${n.src}</div></div>
+      <button class="bundleadd ${inb?'in':''}" onclick="event.stopPropagation();addBundle('${n.id}')">
+        ${inb?'✓ 已加入成條':'⇲ 整條加入（按來源次序）'}</button>
+    </div>`;
+  }).join('');
+}
+function toggleNote(id){selNote=selNote===id?null:id;renderNotes();renderPlaces();}
+function renderPlaces(){
+  const vis=Object.keys(PLACES).filter(pid=>!selNote||PLACES[pid].note===selNote);
+  const hid=Object.keys(PLACES).filter(pid=>selNote&&PLACES[pid].note!==selNote);
+  document.getElementById('places').innerHTML=vis.concat(hid).map(pid=>{
+    const p=PLACES[pid],inP=stopInPlan(pid),nt=NOTES.find(n=>n.id===p.note);
+    return `<div class="place ${hid.includes(pid)?'dim':''}">
+      <div class="ptype">${p.type}</div>
+      <div class="pname">${p.name}</div>
+      <div class="psrc">來自 <b>${nt.title.split(' ')[0]}</b> · ${p.durH}h · ${p.area}</div>
+      <button class="add ${inP?'in':''}" onclick="addStop('${pid}',this)">${inP?'✓':'+'}</button>
+    </div>`;
+  }).join('');
+}
+
+function addStop(pid,btn){
+  const p=PLACES[pid];
+  for(let d=0;d<days.length;d++){
+    const i=days[d].items.findIndex(x=>x.k==='p'&&x.pid===pid);
+    if(i>=0){days[d].items.splice(i,1);toast('移除了 '+p.name);renderAll();return;}
+    if(days[d].items.some(x=>x.k==='b'&&x.nid===p.note)){toast(p.name+' 在 bundle 裡——展開後單獨操作');return;}
+  }
+  const r=btn.getBoundingClientRect();
+  const g=document.createElement('div');g.className='flyghost';
+  g.style.cssText=`left:${r.left-80}px;top:${r.top}px`;g.textContent=p.name;
+  document.body.appendChild(g);g.style.animation='flycard .5s ease-in forwards';
+  setTimeout(()=>g.remove(),520);
+  if(!days.length)days=[{items:[]}];
+  days[days.length-1].items.push({k:'p',pid});
+  toast(p.name+' 加入 DAY '+days.length);renderAll();
+}
+function addBundle(nid){
+  const n=NOTES.find(x=>x.id===nid);
+  const di=days.findIndex(d=>d.items.some(i=>i.k==='b'&&i.nid===nid));
+  if(di>=0){days.splice(di,1);days=days.filter(d=>d.items.length);toast('整條 bundle 移出了');renderAll();return;}
+  days.push({items:[{k:'b',nid,exp:false,rm:[],ins:[],ord:notePids(nid).map(p=>'p:'+p)}]});
+  toast('整條「'+n.title+'」加入做 DAY '+days.length+'——展開可逐站調');renderAll();
+}
+function getBundle(d,i){const b=days[d]&&days[d].items[i];return b&&b.k==='b'?b:null;}
+function toggleBundle(d,i){const b=getBundle(d,i);if(!b)return;b.exp=!b.exp;renderAll();}
+function rmSeg(d,i,pid){
+  const b=getBundle(d,i);if(!b)return;
+  if(b.rm.includes(pid)){b.rm=b.rm.filter(x=>x!==pid);toast('恢復了 '+PLACES[pid].name);}
+  else{b.rm.push(pid);toast(PLACES[pid].name+' 剔除了（再點 ↩ 恢復）');}
+  renderAll();
+}
+function insCustom(d,i,afterOi){
+  const b=getBundle(d,i);if(!b)return;
+  const nm=prompt('插入什麼自訂活動？（例如：午餐 @ 山塘）');if(!nm)return;
+  b.ins.push({name:nm,durH:1});
+  b.ord.splice(afterOi+1,0,'c:'+(b.ins.length-1));
+  renderAll();
+}
+function rmCustom(d,i,insIdx){const b=getBundle(d,i);if(!b)return;
+  const oi=b.ord.indexOf('c:'+insIdx);if(oi>=0)b.ord.splice(oi,1);renderAll();}
+function moveItem(d,i,dir){
+  const ni=i+dir;
+  if(ni>=0&&ni<days[d].items.length){[days[d].items[i],days[d].items[ni]]=[days[d].items[ni],days[d].items[i]];}
+  else if(d+dir>=0&&d+dir<days.length){const it=days[d].items.splice(i,1)[0];days[d+dir].items.push(it);}
+  renderAll();
+}
+function clusterAI(){
+  const loose=[],bundles=[];
+  days.forEach(d=>d.items.forEach(it=>{if(it.k==='p')loose.push(it.pid);else bundles.push(it);}));
+  loose.sort((a,b)=>PLACES[a].ll[1]-PLACES[b].ll[1]);
+  const newDays=[];let cur={items:[]},curH=0;
+  loose.forEach(pid=>{
+    const h=durOf(pid);
+    if(cur.items.length&&curH+h>DAY_CAP_H-1){newDays.push(cur);cur={items:[]};curH=0;}
+    cur.items.push({k:'p',pid});curH+=h;
+  });
+  if(cur.items.length)newDays.push(cur);
+  bundles.forEach(b=>newDays.push({items:[b]}));
+  newDays.sort((a,b)=>{
+    const fa=flatDay(a).find(s=>s.pid),fb=flatDay(b).find(s=>s.pid);
+    return (fa?PLACES[fa.pid].ll[1]:0)-(fb?PLACES[fb.pid].ll[1]:0);});
+  days=newDays;editHint=true;
+  toast('✨ 按地理分了 '+days.length+' 日——↑↓ 可再調');
+  renderAll();
+}
+
+function stopRow(pid,d,i,ctx,arr){
+  const p=PLACES[pid];
+  const updown=`<span class="updn"><button onclick="event.stopPropagation();moveItem(${d},${i},-1)">▲</button><button onclick="event.stopPropagation();moveItem(${d},${i},1)">▼</button></span>`;
+  return `<div class="pstop" data-d="${d}" data-it="${i}"><span class="grip">⠿</span><div class="spine"><div class="tarr">${arr!==undefined?clk(arr):'·'}</div></div>
+    <div class="body"><button class="del" onclick="delItem(${d},${i})">✕</button>
+      <b>${p.name}</b><div class="pm">${durOv[pid]?`<b class="durmod">${durOf(pid)}h改</b>`:`${p.durH}h`} · ${p.costY?'~'+CUR+p.costY:'免費'}<span class="est">估</span></div>
+      <div class="tip" onclick="tipTap('${pid}')">「${p.tip.q}」<b>— ${p.tip.by}</b></div>
+    </div>${ctx==='loose'?updown:''}</div>`;
+}
+function customRow(it,d,i,arr){
+  return `<div class="pstop" data-d="${d}" data-it="${i}"><span class="grip">⠿</span><div class="spine"><div class="tarr" style="opacity:.5">${arr!==undefined?clk(arr):'·'}</div></div>
+    <div class="body" style="border-style:dashed"><button class="del" onclick="delItem(${d},${i})">✕</button>
+      <b>${it.name}</b><div class="pm">自訂 · ${it.durH||1}h</div></div>
+    <span class="updn"><button onclick="event.stopPropagation();moveItem(${d},${i},-1)">▲</button><button onclick="event.stopPropagation();moveItem(${d},${i},1)">▼</button></span></div>`;
+}
+function insLoose(d){
+  const nm=prompt('加什麼自訂活動？');if(!nm)return;
+  days[d].items.push({k:'c',name:nm,durH:1});renderAll();
+}
+function tipTap(pid){
+  const p=PLACES[pid],n=NOTES.find(x=>x.id===p.note);
+  toast('來源：「'+n.title+'」'+(p.tip.at?' @'+p.tip.at:''));
+}
+function delItem(d,i){
+  days[d].items.splice(i,1);days=days.filter(x=>x.items.length||x.label);
+  toast('移除了');renderAll();
+}
+function legRow(aPid,bPid){
+  const l=legEst(aPid,bPid);
+  const yen=v=>v>=1000?CUR+(v/1000).toFixed(1).replace('.0','')+'k':CUR+v;
+  const chip=k=>{const c=l.calc[k];
+    return `<button class="lchip${l.mode===k?' sel':''}" onclick="setLeg('${l.key}','${k}')">${TRANS[k]} ${fm(c.min)}${c.yen?'·'+yen(c.yen):''}</button>`;};
+  return `<div class="leg"><div class="lspine"><div class="lrail"></div><div class="ltim">${fm(l.min)}</div><div class="lrail"></div></div>
+    <div class="lbody">${chip('walk')}${chip('transit')}${chip('drive')}${l.dist>20?chip('rail'):''}<span class="lest">估</span></div></div>`;
+}
+function setLeg(key,m){legOverride[key]=m;renderAll();}
+
+function bundleBlock(b,d,i,tl){
+  const n=NOTES.find(x=>x.id===b.nid);
+  const segs=bundleSegs(b);
+  const h=segs.reduce((s,x)=>s+segDurH(x),0);
+  let inner='';
+  if(b.exp){
+    const sud=si=>segs.length>1?`<span class="updn"><button onclick="event.stopPropagation();moveSeg(${d},${i},${si},-1)">▲</button><button onclick="event.stopPropagation();moveSeg(${d},${i},${si},1)">▼</button></span>`:'';
+    inner+=`<div class="bins" onclick="insCustom(${d},${i},-1)"></div>`;
+    segs.forEach((s,si)=>{
+      if(s.custom){
+        inner+=`<div class="bseg custom" data-d="${d}" data-it="${i}" data-oi="${s.oi}"><span class="grip">⠿</span><div class="spine" style="width:30px;flex:none"><div class="tarr" style="opacity:.5">${tl&&tl[si]?clk(tl[si].arr):'·'}</div></div><div class="sbody"><b>${s.custom}</b>
+          <div class="pm" style="font-size:10px;color:#9a978f">自訂 · ${s.durH}h</div></div>
+          ${sud(si)}<button class="x" onclick="rmCustom(${d},${i},${s.insIdx})">✕</button></div>`;
+      }else{
+        const p=PLACES[s.pid];
+        inner+=`<div class="bseg" data-d="${d}" data-it="${i}" data-oi="${s.oi}"><span class="grip">⠿</span><div class="spine" style="width:30px;flex:none"><div class="tarr">${tl&&tl[si]?clk(tl[si].arr):'·'}</div></div>
+          <div class="sbody"><span class="sname"><b>${p.name}</b></span>
+            <div style="font-size:10px;color:#9a978f;margin-top:1px">${durOv[s.pid]?`<b class="durmod">${durOf(s.pid)}h改</b>`:`${p.durH}h`}</div>
+            <div class="tip" onclick="tipTap('${s.pid}')">「${p.tip.q}」<b>— ${p.tip.by}</b></div></div>
+          ${sud(si)}<button class="x" onclick="rmSeg(${d},${i},'${s.pid}')">✕</button></div>`;
+      }
+      const nx=segs[si+1];
+      if(s.pid&&nx&&nx.pid)inner+=legRow(s.pid,nx.pid);
+      inner+=`<div class="bins" onclick="insCustom(${d},${i},${s.oi})"></div>`;
+    });
+    b.rm.forEach(pid=>{inner+=`<div class="bseg removed"><div class="sbody"><span class="sname">${PLACES[pid].name}</span><span class="rmtag">REMOVED</span></div>
+      <button class="x" onclick="rmSeg(${d},${i},'${pid}')">↩</button></div>`;});
+    inner+=`<div class="bfoot"><button onclick="toggleBundle(${d},${i})">收合 ▾</button>
+      <button onclick="moveItem(${d},${i},-1)">↑ 搬上</button><button onclick="moveItem(${d},${i},1)">↓ 搬落</button></div>`;
+  }
+  return `<div class="bundle ${b.exp?'open':''}" data-d="${d}" data-it="${i}">
+    <div class="bhdr" onclick="toggleBundle(${d},${i})">
+      <span class="grip" onclick="event.stopPropagation()">⠿</span><span class="chev">▶</span><span class="btag">SRC</span>
+      <span class="btitle">${n.title} <span style="font-weight:400;color:#9a978f">— ${n.src.split(' ')[0]}</span></span>
+      <span class="bmeta">${segs.filter(s=>!s.custom).length} 站 · ~${h.toFixed(1).replace('.0','')}h 估${bundleReordered(b)?' · 調過序':''}</span>
+    </div>${b.exp?`<div class="bbody">${inner}</div>`:''}</div>`;
+}
+
+const CAL_PX=1.15;
+function calHTML(day,di){
+  const tl=dayTimeline(day);
+  if(!tl.length)return '';
+  const lastEnd=tl[tl.length-1].arr+tl[tl.length-1].durMin;
+  const span=Math.max(lastEnd,DAY_END)-DAY_START;
+  let g='',mk='',bl='';
+  for(let t=DAY_START;t<=Math.max(lastEnd,DAY_END);t+=60)
+    g+=`<div class="calgrid" style="top:${(t-DAY_START)*CAL_PX}px"><span>${clk(t)}</span></div>`;
+  tl.forEach((e,k)=>{
+    const top=(e.arr-DAY_START)*CAL_PX,hh=Math.max(e.durMin*CAL_PX,18);
+    const nm=e.s.custom?e.s.custom:PLACES[e.s.pid].name;
+    bl+=`<div class="calb${e.s.inB?' inb':''}${e.s.custom?' custom':''}" data-d="${di}" data-fi="${k}"
+      style="top:${top}px;height:${hh}px"><b>${nm}</b><span>${clk(e.arr)}–${clk(e.arr+e.durMin)} · ${fm(e.durMin)}${e.s.inB?' · SRC':''}${e.s.pid&&durOv[e.s.pid]?' ·改':''}</span><div class="calrsz"></div></div>`;
+    if(e.legAfter)bl+=`<div class="calleg" style="top:${top+hh}px;height:${Math.max(e.legAfter*CAL_PX,14)}px"><span>~${fm(e.legAfter)}</span></div>`;
+  });
+  mk+=`<div class="calmark dayend" style="top:${(DAY_END-DAY_START)*CAL_PX}px"><span>${clk(DAY_END)}</span></div>`;
+  const a=dayArea(day);
+  if(a&&LAST_TRANSIT_MIN[a])mk+=`<div class="calmark" style="top:${(LAST_TRANSIT_MIN[a]-DAY_START)*CAL_PX}px"><span>${LAST_TRANSIT[a]}</span></div>`;
+  return `<div class="cal" data-d="${di}" style="height:${span*CAL_PX}px">${g}${bl}${mk}</div>
+    <div class="calnote">拖上下=調序/換日 · 拉出 bundle 色塊=拆成普通站 · 拉底邊=改時長</div>`;
+}
+function renderPlan(){
+  const n=allStopsCount();
+  document.getElementById('plansum').textContent=n?`${n} 站 · ${days.length} 日`:'0 站';
+  document.getElementById('mbadge').textContent=n?`(${n})`:'';
+  if(!n){document.getElementById('planlist').innerHTML=
+    `<div class="emptyplan"><div class="big">🗺</div>
+     <p>Build your trip<br>左邊點任何地點的 <b style="color:#e8b44f">+</b> 逐個加<br>或在 note 卡點 <b style="color:#e8b44f">整條加入</b> 做 bundle</p></div>`;return;}
+  let h='';
+  h+=`<div class="vtog"><button class="${planView==='list'?'sel':''}" onclick="planView='list';renderPlan()">☰ 列表</button><button class="${planView==='cal'?'sel':''}" onclick="planView='cal';renderPlan()">🗓 時間軸</button></div>`;
+  if(planView==='cal')h+=`<div class="caldays">`;
+  days.forEach((day,di)=>{
+    const dh=dayHours(day),cost=dayCost(day);
+    const over=dh>DAY_CAP_H;
+    const cstr=dayArea(day)?LAST_TRANSIT[dayArea(day)]:null;
+    const lbl=day.label||('DAY '+(di+1)+(dayName(day)?' · '+dayName(day):''));
+    h+=`<div class="daysec" data-d="${di}"><div class="dayhdr">${lbl}
+        <span class="dcap ${over?'over':''}">${dh.toFixed(1)}h / ${DAY_CAP_H}h${cost?` · ~${CUR}${cost}`:''} 估</span></div>
+      ${over?`<div class="daywarn">⚠ 超時 ${(dh-DAY_CAP_H).toFixed(1)}h${cstr?` — ${cstr}`:' — 考慮減一站'}</div>`:''}
+      <div class="dayline"></div>`;
+    if(planView==='cal'){h+=calHTML(day,di)+`</div>`;return;}
+    const tl=dayTimeline(day);let fi=0;
+    const pidOf=(it,last)=>{
+      if(it.k==='p')return it.pid;
+      if(it.k!=='b')return null;
+      const ps=bundleSegs(it).filter(s=>s.pid);
+      return ps.length?ps[last?ps.length-1:0].pid:null;
+    };
+    day.items.forEach((it,i)=>{
+      if(it.k==='p'){h+=stopRow(it.pid,di,i,'loose',tl[fi]&&tl[fi].arr);fi++;}
+      else if(it.k==='c'){h+=customRow(it,di,i,tl[fi]&&tl[fi].arr);fi++;}
+      else{h+=bundleBlock(it,di,i,tl.slice(fi,fi+bundleSegs(it).length));fi+=bundleSegs(it).length;}
+      const nx=day.items[i+1];
+      if(nx){const a=pidOf(it,true),b=pidOf(nx,false);if(a&&b)h+=legRow(a,b);}
+    });
+    h+=`<div class="bins wide" onclick="insLoose(${di})">＋ 加自訂活動</div></div>`;
+  });
+  if(planView==='cal')h+=`</div>`;
+  if(n>=3&&days.length===1&&!declinedCluster){
+    h+=`<div class="offerbar"><div class="otxt">✨ <b>${n} 個地方就緒</b>——<br>按地理幫你分日嗎？（保留你的次序做 hint）</div>
+         <button onclick="clusterAI()">幫我分日</button>
+         <button class="naa" onclick="declinedCluster=true;renderPlan()">不用</button></div>`;
+  }
+  if(days.length>1)h+=`<div class="unlockhint">⠿ 拖站換日 · bundle 展開逐站調 · 剔除咗按 ↩ 恢復</div>`;
+  document.getElementById('planlist').innerHTML=h;
+}
+
+let mapInit=false;
+function renderMap(){
+  if(mapInit||!window.L)return;mapInit=true;
+  const lls=Object.values(PLACES).map(p=>p.ll);
+  const cl=[lls.reduce((a,l)=>a+l[0],0)/lls.length,lls.reduce((a,l)=>a+l[1],0)/lls.length];
+  const map=L.map('libmap',{scrollWheelZoom:false}).setView(cl,9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',
+    attribution:'© OSM © CARTO'}).addTo(map);
+  Object.keys(PLACES).forEach(pid=>L.marker(PLACES[pid].ll,{icon:icon(PLACES[pid].name[0])}).addTo(map).bindTooltip(PLACES[pid].name));
+}
+function simExtract(){
+  const v=document.getElementById('linkin').value;
+  toast(v?'提取中…（需後端 /api/extract — pipeline 接駁位已留）':'先貼條 link');
+}
+function resetPlan(){if(confirm('重置回基準行程？自訂更動都會消失。')){localStorage.removeItem(LSKEY);location.reload()}}
+function copyPlan(){
+  let out=(document.getElementById('tripname').value||TRIP.name)+'\n'+'='.repeat(28)+'\n';
+  days.forEach((d,di)=>{out+='\n'+(d.label||('DAY '+(di+1)))+`  [${dayHours(d).toFixed(1)}h]`+'\n';
+    flatDay(d).forEach(s=>{out+=`  · ${s.custom||PLACES[s.pid].name}${s.pid&&PLACES[s.pid].costY?' ~'+CUR+PLACES[s.pid].costY:''}\n`})});
+  navigator.clipboard.writeText(out).then(()=>toast('已複製文字版行程'));
+}
+
+/* ---------- calendar drag & resize ---------- */
+function itemFlatLen(it){return it.k==='b'?bundleSegs(it).length:1;}
+let dragCtx=null;
+document.addEventListener('pointerdown',ev=>{
+  const bl=ev.target.closest('.calb');if(!bl)return;
+  const d=+bl.dataset.d,fi=+bl.dataset.fi;
+  const e=dayTimeline(days[d])[fi];if(!e)return;
+  dragCtx={day:days[d],fi,el:bl,startY:ev.clientY,origMin:e.durMin,
+    grabY:ev.clientY-bl.getBoundingClientRect().top,
+    type:ev.target.closest('.calrsz')?'rsz':'mv'};
+  try{bl.setPointerCapture(ev.pointerId);}catch(_){}
+  bl.classList.add('dragging');ev.preventDefault();
+});
+document.addEventListener('pointermove',ev=>{
+  const c=dragCtx;if(!c)return;
+  if(c.type==='rsz'){
+    const nm=Math.max(15,Math.round((c.origMin+(ev.clientY-c.startY)/CAL_PX)/15)*15);
+    c.newMin=nm;c.el.style.height=Math.max(nm*CAL_PX,18)+'px';
+    const sp=c.el.querySelector('span');if(sp)sp.textContent='→ '+fm(nm);
+  }else{
+    const r=c.el.closest('.cal').getBoundingClientRect();
+    c.el.style.top=Math.max(0,ev.clientY-r.top-c.grabY)+'px';
+    let tgt=null;
+    document.querySelectorAll('.cal').forEach(el=>{
+      const rc=el.getBoundingClientRect();
+      if(ev.clientX>=rc.left-20&&ev.clientX<=rc.right+20&&ev.clientY>=rc.top-40&&ev.clientY<=rc.bottom+40)tgt=el;});
+    c.tgt=tgt?days[+tgt.dataset.d]:null;
+    c.dropMin=c.tgt?DAY_START+(ev.clientY-tgt.getBoundingClientRect().top-c.grabY)/CAL_PX:null;
+    document.querySelectorAll('.calins').forEach(x=>x.remove());
+    if(c.tgt&&c.dropMin!==null){
+      let insY=0;
+      dayTimeline(c.tgt).forEach(en=>{if(en.arr+en.durMin/2<c.dropMin)insY=(en.arr+en.durMin+en.legAfter-DAY_START)*CAL_PX;});
+      const m=document.createElement('div');m.className='calins';m.style.top=insY+'px';tgt.appendChild(m);
+    }
+  }
+});
+function endDrag(){
+  const c=dragCtx;if(!c)return;
+  document.querySelectorAll('.calins').forEach(x=>x.remove());
+  if(c.type==='rsz'&&c.newMin)commitResize(c);
+  else if(c.type==='mv'&&c.tgt)commitMove(c);
+  dragCtx=null;renderAll();
+}
+document.addEventListener('pointerup',endDrag);
+document.addEventListener('pointercancel',()=>{dragCtx=null;
+  document.querySelectorAll('.calins').forEach(x=>x.remove());renderAll();});
+function commitResize(c){
+  const e=flatDay(c.day)[c.fi];if(!e)return;
+  const h=c.newMin/60;
+  if(e.custom&&e.inB){const b=c.day.items[e.it];b.ins[e.insIdx].durH=h;}
+  else if(e.custom){c.day.items[e.it].durH=h;}
+  else durOv[e.pid]=h;
+  toast('「'+(e.custom||PLACES[e.pid].name)+'」時長改為 '+fm(c.newMin)+'（自訂）');
+}
+function commitMove(c){
+  const srcDay=c.day,tgtDay=c.tgt,dropMin=c.dropMin;
+  const e=flatDay(srcDay)[c.fi];if(!e)return;
+  const flatIdx=day=>{const tl=dayTimeline(day);let k=tl.length;
+    tl.forEach((en,i)=>{if(k===tl.length&&en.arr+en.durMin/2>=dropMin)k=i;});return k;};
+  const flatToItem=(day,k)=>{let acc=0;
+    for(let j=0;j<day.items.length;j++){const len=itemFlatLen(day.items[j]);
+      if(k<acc+len)return (k-acc>len/2)?j+1:j;acc+=len;}return day.items.length;};
+  if(e.oi!==undefined&&tgtDay===srcDay){
+    const fl=flatDay(srcDay);let s0=1e9,s1=-1;
+    fl.forEach((x,i)=>{if(x.it===e.it){s0=Math.min(s0,i);s1=i+1;}});
+    const k=flatIdx(srcDay);
+    if(k>=s0&&k<s1){
+      const b=srcDay.items[e.it],tok=e.pid!==undefined?'p:'+e.pid:'c:'+e.insIdx;
+      const segs=bundleSegs(b);const ci=segs.findIndex(s=>s.oi===e.oi);
+      let vi=Math.min(Math.max(k-s0,0),segs.length);
+      if(vi===ci||vi===ci+1)return;
+      b.ord.splice(e.oi,1);if(vi>ci)vi--;
+      const after=bundleSegs(b);
+      const destOi=vi<after.length?after[vi].oi:b.ord.length;
+      b.ord.splice(destOi,0,tok);
+      toast('調了次序');return;
+    }
+  }
+  let newItem;
+  if(e.oi!==undefined){
+    const b=srcDay.items[e.it];
+    if(e.pid!==undefined){b.ord.splice(b.ord.indexOf('p:'+e.pid),1);newItem={k:'p',pid:e.pid};}
+    else{b.ord.splice(b.ord.indexOf('c:'+e.insIdx),1);newItem={k:'c',name:e.custom,durH:e.durH};}
+  }else{
+    newItem=srcDay.items.splice(e.it,1)[0];
+  }
+  if(!days.includes(tgtDay))days.push(tgtDay);
+  const k=flatIdx(tgtDay),ii=flatToItem(tgtDay,k);
+  tgtDay.items.splice(ii,0,newItem);
+  toast(e.inB&&e.oi!==undefined?'從 bundle 拆出做普通站':'搬好了');
+}
+
+/* ---------- list view drag & drop (grip ⠿) ---------- */
+let lDrag=null;
+function listItemEls(sec){return [...sec.querySelectorAll(':scope>.pstop,:scope>.bundle')];}
+document.addEventListener('pointerdown',ev=>{
+  const g=ev.target.closest('.grip');if(!g)return;
+  const segEl=ev.target.closest('.bseg'),stopEl=ev.target.closest('.pstop'),
+        bunEl=ev.target.closest('.bundle');
+  const el=segEl||stopEl||bunEl;if(!el)return;
+  lDrag={el,kind:segEl?'seg':'item',d:+el.dataset.d,it:+el.dataset.it,
+    oi:segEl?+el.dataset.oi:undefined,startY:ev.clientY,active:false};
+  try{g.setPointerCapture(ev.pointerId);}catch(_){}
+  ev.preventDefault();
+});
+document.addEventListener('pointermove',ev=>{
+  const c=lDrag;if(!c)return;
+  const dy=ev.clientY-c.startY;
+  if(!c.active&&Math.abs(dy)<6)return;
+  c.active=true;c.el.classList.add('dragging');
+  c.el.style.transform=`translateY(${dy}px)`;
+  document.querySelectorAll('.insline').forEach(x=>x.remove());
+  c.tgt=null;c.tgtBundle=null;c.bi=null;
+  let tgtSec=null;
+  document.querySelectorAll('.daysec').forEach(s=>{const r=s.getBoundingClientRect();
+    if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom)tgtSec=s;});
+  if(!tgtSec)return;
+  c.tgt=days[+tgtSec.dataset.d];
+  const under=document.elementFromPoint(ev.clientX,ev.clientY);
+  const bbody=under&&under.closest?under.closest('.bbody'):null;
+  const m=document.createElement('div');m.className='insline';
+  if(bbody&&tgtSec.contains(bbody)&&c.kind==='seg'){
+    const segs=[...bbody.querySelectorAll(':scope>.bseg')]
+      .filter(x=>x!==c.el&&!x.classList.contains('removed'));
+    let vi=segs.length;
+    segs.forEach((s,i)=>{const r=s.getBoundingClientRect();
+      if(vi===segs.length&&ev.clientY<r.top+r.height/2)vi=i;});
+    const bun=bbody.closest('.bundle');
+    c.tgtBundle={d:+bun.dataset.d,it:+bun.dataset.it};c.vi=vi;
+    bbody.insertBefore(m,segs[vi]||bbody.querySelector('.bfoot'));
+  }else{
+    const els=listItemEls(tgtSec).filter(x=>x!==c.el);
+    let bi=els.length;
+    els.forEach((e,i)=>{const r=e.getBoundingClientRect();
+      if(bi===els.length&&ev.clientY<r.top+r.height/2)bi=i;});
+    if(bbody&&tgtSec.contains(bbody)){
+      const bun=bbody.closest('.bundle');
+      const j=els.indexOf(bun);
+      const r=bun.getBoundingClientRect();
+      bi=j<0?bi:j+(ev.clientY>r.top+r.height/2?1:0);
+    }
+    c.bi=bi;
+    tgtSec.insertBefore(m,els[bi]||tgtSec.querySelector(':scope>.bins'));
+  }
+});
+document.addEventListener('pointerup',()=>{
+  const c=lDrag;if(!c)return;
+  document.querySelectorAll('.insline').forEach(x=>x.remove());
+  c.el.classList.remove('dragging');c.el.style.transform='';
+  if(c.active&&c.tgt)commitListDrop(c);
+  lDrag=null;renderAll();
+});
+document.addEventListener('pointercancel',()=>{
+  const c=lDrag;if(!c)return;
+  document.querySelectorAll('.insline').forEach(x=>x.remove());
+  c.el.classList.remove('dragging');c.el.style.transform='';
+  lDrag=null;renderAll();
+});
+function commitListDrop(c){
+  const srcDay=days[c.d],tgtDay=c.tgt;if(!srcDay||!tgtDay)return;
+  if(c.kind==='seg'){
+    const b=srcDay.items[c.it];if(!b||b.k!=='b')return;
+    const token=b.ord[c.oi];if(!token)return;
+    if(c.tgtBundle&&days[c.tgtBundle.d]===tgtDay&&c.tgtBundle.it===c.it){
+      const segs=bundleSegs(b);const ci=segs.findIndex(s=>s.oi===c.oi);
+      let vi=Math.min(Math.max(c.vi,0),segs.length);
+      if(vi===ci||vi===ci+1)return;
+      b.ord.splice(c.oi,1);if(vi>ci)vi--;
+      const after=bundleSegs(b);
+      b.ord.splice(vi<after.length?after[vi].oi:b.ord.length,0,token);
+      toast('調了次序');return;
+    }
+    b.ord.splice(c.oi,1);
+    const newItem=token.startsWith('p:')
+      ?{k:'p',pid:token.slice(2)}
+      :(x=>({k:'c',name:x.name,durH:x.durH||1}))(b.ins[+token.slice(2)]||{name:'自訂'});
+    let bi=c.bi===null?tgtDay.items.length:c.bi;
+    tgtDay.items.splice(bi,0,newItem);
+    toast('從 bundle 拆出做普通站');return;
+  }
+  const it=srcDay.items[c.it];if(!it)return;
+  let bi=c.bi===null?tgtDay.items.length:c.bi;
+  srcDay.items.splice(c.it,1);
+  if(srcDay===tgtDay&&c.it<bi)bi--;
+  tgtDay.items.splice(bi,0,it);
+  toast('搬好了');
+}
+function renderAll(){renderNotes();renderPlaces();renderPlan();save();}
+renderAll();renderMap();
+</script>
+</body>
+</html>
