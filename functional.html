@@ -827,6 +827,11 @@ try{
        .addTo(routeL).bindPopup("<b>"+p[0]+"</b><br>"+p[4]);
     });
     L.polyline([[31.3330,120.6230],[30.7443,120.4918],[30.2917,120.2128],[30.2295,120.4344]],{color:"#d97706",weight:2.5,dashArray:"6 6",opacity:.8}).addTo(routeL);
+    /* D1 上海段：PVG → 磁浮/2号线 → 南京东路 → 回虹桥 → 苏州 */
+    L.polyline([[31.1443,121.8080],[31.2085,121.5552],[31.2374,121.4798]],{color:"#2563eb",weight:2.5,dashArray:"6 6",opacity:.8}).addTo(routeL);
+    L.polyline([[31.2374,121.4798],[31.1944,121.3210],[31.3330,120.6230]],{color:"#2563eb",weight:2.5,dashArray:"6 6",opacity:.8}).addTo(routeL);
+    /* 外滩步行环线：南京东路站 → 外滩 → 豫园 → 回站 */
+    L.polyline([[31.2374,121.4798],[31.2400,121.4900],[31.2272,121.4922],[31.2374,121.4798]],{color:"#dc2626",weight:2,dashArray:"2 5",opacity:.9}).addTo(routeL);
     cityL.addTo(cmap);
     document.querySelectorAll(".maptog button").forEach(function(b){
       b.addEventListener("click",function(){
@@ -834,7 +839,7 @@ try{
         b.classList.add("on");
         if(b.getAttribute("data-v")==="route"){
           cmap.removeLayer(cityL);routeL.addTo(cmap);
-          cmap.flyToBounds([[31.3330,120.6230],[30.7443,120.4918],[30.2295,120.4344]],{padding:[24,24]});
+          cmap.flyToBounds([[31.1443,121.8080],[30.7443,120.4918],[30.2295,120.4344]],{padding:[24,24]});
         }else{
           cmap.removeLayer(routeL);cityL.addTo(cmap);
           cmap.flyTo([31.315,120.612],13);
