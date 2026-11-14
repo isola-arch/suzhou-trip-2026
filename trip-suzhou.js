@@ -50,7 +50,9 @@ places:{
  p_clt:{name:'滄浪亭',type:'SEE & DO',ll:[31.3040,120.6220],area:'城南',durH:1.5,costY:20,
    tip:{q:'蘇州最古園林 · 借景葑溪',by:'基準方案',at:''},note:'n2',reelIdx:8},
  p_wsy:{name:'網師園',type:'SEE & DO',ll:[31.3020,120.6320],area:'城南',durH:1.5,costY:40,
-   tip:{q:'全蘇最小名園密度最高 · 夜遊限定',by:'基準方案',at:''},note:'n2',reelIdx:9},
+   tip:{q:'全蘇最小名園密度最高 · 夜遊崑曲+評彈穿園演出~¥100（季節限定19:30–22:00，出發前查公眾號11月有無場次）',by:'基準方案',at:''},note:'n2',reelIdx:9},
+ p_jjh:{name:'金雞湖+誠品',type:'SEE & DO',ll:[31.3170,120.6970],area:'園區',durH:3,costY:0,
+   tip:{q:'湖景+誠品書店+蘇州中心 · 跟古城反向 ~25min地鐵 · 晚上散步另一種蘇州',by:'候選研究',at:''},note:'n2',reelIdx:21},
  p_yb:{name:'藝圃',type:'SEE & DO',ll:[31.3240,120.6150],area:'古城',durH:1.5,costY:10,
    tip:{q:'本地人茶室 ¥10 · 深巷秘境',by:'基準方案',at:''},note:'n2',reelIdx:10},
  /* ---- 遠郊 ---- */
@@ -80,8 +82,10 @@ places:{
  /* ---- 交通樞紐 ---- */
  p_pvg:{name:'浦東機場 PVG',type:'TRANSIT',ll:[31.1440,121.8080],area:'上海',durH:1,costY:0,
    tip:{q:'磁浮→龍陽路→2號線進城 ~50min',by:'基準方案',at:''},note:'n2',reelIdx:16},
+ p_shz:{name:'上海站',type:'TRANSIT',ll:[31.2490,121.4550],area:'上海站',durH:0.5,costY:0,
+   tip:{q:'⭐ 離外灘/南京路最近：人民廣場1站(1號線)/打車15min · 滬寧城際→蘇州站 ~25–40min 班密',by:'修正',at:''},note:'n2',reelIdx:17},
  p_hq2:{name:'上海虹橋站',type:'TRANSIT',ll:[31.1940,121.3210],area:'上海',durH:0.75,costY:0,
-   tip:{q:'2號線直達 · G字到蘇州站 ~40min',by:'基準方案',at:''},note:'n2',reelIdx:17},
+   tip:{q:'2號線直達但離外灘 ~40min · 去杭州方向更順 · 上海市內玩選上海站更好',by:'基準方案',at:''},note:'n2',reelIdx:16},
  p_szz:{name:'蘇州站',type:'TRANSIT',ll:[31.3330,120.6230],area:'蘇州站',durH:0.5,costY:0,
    tip:{q:'4號線直達樂橋/察院場 · 買票認「蘇州站」勿買蘇州北',by:'基準方案',at:''},note:'n2',reelIdx:18},
  p_hzd:{name:'杭州東站',type:'TRANSIT',ll:[30.2920,120.2130],area:'杭州',durH:0.5,costY:0,
@@ -95,6 +99,15 @@ places:{
    tip:{q:'松鼠桂魚 · 觀前街老字號',by:'基準方案',at:''},note:'n4',reelIdx:1},
  f_dhc:{name:'大壺春生煎',type:'FOOD',ll:[31.2320,121.4880],area:'外灘',durH:0.75,costY:30,
    tip:{q:'XHS 窮鬼米其林帖 · 位置待核',by:'XHS #65',at:''},note:'n4',reelIdx:2},
+ /* ---- 評彈/夜間 ---- */
+ f_ptm:{name:'評彈博物館',type:'SEE & DO',ll:[31.3180,120.6330],area:'古城東',durH:1.5,costY:30,
+   tip:{q:'平江路中張家巷14號 · 下午場~14:00 · ¥10–30含茶 · 正場評彈連載書目 · 逛平江路順腳',by:'評彈研究',at:''},note:'n4',reelIdx:3},
+ f_gy:{name:'光裕書廳',type:'SEE & DO',ll:[31.3120,120.6200],area:'觀前',durH:2,costY:30,
+   tip:{q:'宮巷第一天門 · 蘇州評彈團正統書場 · 老聽客追連載 · 夜場要查公眾號排期',by:'評彈研究',at:''},note:'n4',reelIdx:4},
+ f_tea:{name:'平江路評彈茶館',type:'SEE & DO',ll:[31.3165,120.6305],area:'古城東',durH:1.5,costY:80,
+   tip:{q:'滾動場19:00–21:00隨到隨聽 · 名段集錦+字幕對遊客友好 · ¥50–150 · 當有戲的休息站',by:'評彈研究',at:''},note:'n4',reelIdx:5},
+ f_st:{name:'雙塔市集',type:'FOOD',ll:[31.3080,120.6340],area:'城南',durH:1,costY:40,
+   tip:{q:'網紅改造菜場 · 早餐/小吃一條龍 · 離平江路南端近',by:'候選研究',at:''},note:'n4',reelIdx:6},
 },
 
 /* 各區域末班/關門提醒（日時間軸紅線） */
@@ -113,10 +126,11 @@ seedDays:[
    {k:'p',pid:'p_bd'},
    {k:'p',pid:'p_fd'},
    {k:'p',pid:'p_ljz'},
-   {k:'c',name:'陸家嘴→南京東路取箱→虹橋',durH:1},
-   {k:'p',pid:'p_hq2'},
+   {k:'c',name:'陸家嘴→南京東路取行李→人民廣場',durH:0.8},
+   {k:'p',pid:'p_shz'},
    {k:'p',pid:'p_szz'},
-   {k:'c',name:'4號線→樂橋酒店 check-in',durH:0.5}]},
+   {k:'c',name:'4號線→樂橋酒店 check-in',durH:0.5},
+   {k:'c',name:'觀前街晚飯 18:15–19:15',durH:1}]},
  {label:'D2 · 11/20 五 · 古城核心',items:[
    {k:'p',pid:'p_zz'},
    {k:'p',pid:'p_sbm'},
