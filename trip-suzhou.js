@@ -65,7 +65,7 @@ places:{
    tip:{q:'南京東路409號 · 散稱~¥59/斤 · 奶茶店371號 · 媽指定🐰',by:'家人',at:''},note:'n3',reelIdx:0},
  p_wbd:{name:'外白渡橋+外灘源',type:'SEE & DO',ll:[31.2440,121.4860],area:'外灘',durH:1,costY:0,
    tip:{q:'蘇州河交匯口 · 領事館紅磚群 · 人比主幹道少',by:'D1研究',at:''},note:'n3',reelIdx:1},
- p_bd:{name:'外灘萬國建築群',type:'SEE & DO',ll:[31.2400,121.4900],area:'外灘',durH:1.5,costY:0,
+ p_bd:{name:'外灘萬國建築群',type:'SEE & DO',ll:[31.2400,121.4900],area:'外灘',durH:1,costY:0,
    tip:{q:'中東一路北往南 · 匯豐→海關→和平飯店 · 大堂穹頂免費進',by:'D1研究',at:''},note:'n3',reelIdx:2},
  p_yy:{name:'豫園+城隍廟',type:'SEE & DO',ll:[31.2270,121.4920],area:'豫園',durH:2,costY:40,
    tip:{q:'只買正門基礎票別買捆綁票',by:'XHS三帖',at:''},note:'n3',reelIdx:3},
