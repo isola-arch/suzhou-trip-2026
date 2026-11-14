@@ -129,7 +129,7 @@ seedDays:[
    {k:'c',name:'陸家嘴→南京東路取行李→人民廣場',durH:0.8},
    {k:'p',pid:'p_shz'},
    {k:'p',pid:'p_szz'},
-   {k:'c',name:'4號線→樂橋酒店 check-in',durH:0.5},
+   {k:'c',name:'打車→平江路酒店 check-in（¥20/15min，別拖箱換乘）',durH:0.5},
    {k:'c',name:'觀前街晚飯 18:15–19:15',durH:1}]},
  {label:'D2 · 11/20 五 · 古城核心',items:[
    {k:'p',pid:'p_zz'},
