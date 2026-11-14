@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>乌镇西栅 · 万无一失攻略</title>
+<style>
+  * { margin:0; box-sizing:border-box; }
+  :root { --ink:#1a1a1a; --mut:#6b6b66; --line:#e2e0da; --bg:#faf9f7;
+          --ok:#15803d; --warn:#b45309; --urg:#b91c1c; --act:#1d4ed8; --soft:#f3f1ec;
+          --gold:#a16207; --night:#3730a3; }
+  body { background:var(--bg); color:var(--ink);
+         font:14px/1.65 -apple-system,"Segoe UI","PingFang SC","Microsoft JhengHei",sans-serif; }
+  .wrap { max-width:860px; margin:0 auto; padding:0 16px 60px; }
+
+  .status { position:sticky; top:0; z-index:50; background:var(--bg); border-bottom:1px solid var(--line);
+            padding:10px 0; display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; font-size:12.5px; }
+  .status .t { font-weight:700; font-size:14px; }
+  .status a { color:var(--act); text-decoration:none; font-size:11.5px; }
+  .status a:hover { text-decoration:underline; }
+  .pill { display:inline-block; font-size:11px; padding:0 7px; border-radius:10px; border:1px solid var(--line); background:#fff; white-space:nowrap; }
+  .pill.ok { color:var(--ok); border-color:#bcd9c4; background:#eef6ef; }
+  .pill.warn { color:var(--warn); border-color:#e3cba4; background:#faf3e6; }
+  .pill.urg { color:var(--urg); border-color:#e3b4b4; background:#faecec; }
+
+  h1 { font-size:20px; margin:20px 0 2px; }
+  .sub { color:var(--mut); font-size:12.5px; margin-bottom:14px; }
+  h2 { font-size:12px; letter-spacing:.1em; color:var(--mut); font-weight:700; margin:30px 0 8px;
+       padding-bottom:5px; border-bottom:1px solid var(--line); display:flex; gap:10px; align-items:baseline; }
+  h2 .n { color:var(--act); }
+  h2 .hint { margin-left:auto; font-weight:400; letter-spacing:0; font-size:11px; }
+  p.note { font-size:12px; color:var(--mut); margin:6px 0; }
+  .keyrow { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px; }
+  .key { background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:12px; }
+  .key b { display:block; font-size:15px; }
+
+  /* flow steps */
+  .flow { display:flex; flex-direction:column; gap:0; }
+  .fstep { display:flex; gap:12px; padding:10px 12px; background:#fff; border:1px solid var(--line); border-bottom:none; cursor:pointer; }
+  .fstep:last-child { border-bottom:1px solid var(--line); }
+  .fstep:hover { background:var(--soft); }
+  .fstep .fno { min-width:26px; height:26px; border-radius:50%; background:var(--act); color:#fff;
+                font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .fstep .ft { flex:1; font-size:13px; font-weight:600; }
+  .fstep .fd { font-size:12px; color:var(--mut); font-weight:400; margin-top:2px; display:none; }
+  .fstep.open .fd { display:block; }
+  .fstep.open { background:#eef4ff; }
+
+  /* decision radios */
+  .dec { background:#fff; border:1px solid var(--line); }
+  .dec label { display:flex; gap:10px; padding:9px 12px; border-bottom:1px solid var(--line); cursor:pointer; align-items:flex-start; font-size:12.5px; }
+  .dec label:last-child { border-bottom:none; }
+  .dec label:hover { background:var(--soft); }
+  .dec label.chosen { background:#eef4ff; }
+  .dec input { margin-top:3px; accent-color:var(--act); }
+  .dec .dt { flex:1; } .dec .dd { color:var(--mut); font-size:11.5px; margin-top:2px; }
+  .verdict { padding:10px 12px; border-top:1px solid var(--line); background:#eef6ef; font-size:12.5px; }
+
+  /* route cards */
+  .route { background:#fff; border:1px solid var(--line); margin-bottom:8px; }
+  .route .rh { padding:9px 12px; display:flex; gap:10px; align-items:baseline; cursor:pointer; flex-wrap:wrap; }
+  .route .rh:hover { background:var(--soft); }
+  .route .rt { font-weight:700; font-size:13px; }
+  .route .rc { color:var(--mut); font-size:11.5px; }
+  .route .rb { display:none; padding:8px 12px 10px; border-top:1px dashed var(--line); font-size:12.5px; }
+  .route.open .rb { display:block; }
+  .route .rb .seg { display:flex; gap:8px; padding:3px 0; }
+  .route .rb .seg .tm { min-width:88px; color:var(--mut); font-variant-numeric:tabular-nums; font-size:11.5px; padding-top:2px; }
+  .tag { font-size:10px; padding:0 5px; border-radius:4px; border:1px solid var(--line); color:var(--mut); white-space:nowrap; }
+  .tag.ok { color:var(--ok); border-color:#bcd9c4; } .tag.warn { color:var(--warn); border-color:#e3cba4; }
+  .tag.urg { color:var(--urg); border-color:#e3b4b4; } .tag.fix { color:var(--act); border-color:#b9ccf0; }
+
+  /* 24h timeline */
+  .tl-wrap { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:640px){ .tl-wrap{grid-template-columns:1fr;} }
+  .tl-col h3 { font-size:12px; margin:0 0 6px; }
+  .tl { border-left:3px solid var(--line); padding-left:0; }
+  .tl .blk { position:relative; background:#fff; border:1px solid var(--line); border-left:3px solid var(--mut);
+             margin:0 0 6px 10px; padding:6px 10px; font-size:12px; }
+  .tl .blk .tm { font-weight:700; font-variant-numeric:tabular-nums; font-size:12px; }
+  .tl .blk .what { font-weight:600; }
+  .tl .blk .mt { color:var(--mut); font-size:11px; margin-top:1px; }
+  .tl .blk.b-show { border-left-color:var(--night); }
+  .tl .blk.b-free { border-left-color:var(--ok); }
+  .tl .blk.b-food { border-left-color:var(--gold); }
+  .tl .blk.b-dead { border-left-color:var(--urg); background:#faecec; }
+  .tl .blk.b-move { border-left-color:var(--act); }
+  .tl .blk.b-peak { border-left-color:var(--warn); background:#fdfaf3; }
+
+  /* show schedule table */
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+  .chip { font-size:11.5px; padding:2px 10px; border-radius:12px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+  .chip.on { background:var(--act); color:#fff; border-color:var(--act); }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; background:#fff; border:1px solid var(--line); }
+  th { text-align:left; color:var(--mut); font-weight:600; font-size:11.5px; padding:6px 10px; border-bottom:1px solid var(--line); background:var(--soft); }
+  td { padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  tr.hide { display:none; }
+  .num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .free { color:var(--ok); font-weight:700; }
+
+  /* lodging tiers */
+  .tiers { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  @media (max-width:640px){ .tiers{grid-template-columns:1fr;} }
+  .tier { background:#fff; border:1px solid var(--line); padding:10px 12px; font-size:12px; }
+  .tier.rec { border-color:#b9ccf0; box-shadow:inset 0 2px 0 var(--act); }
+  .tier h4 { font-size:13px; margin-bottom:4px; }
+  .tier .p { font-size:14px; font-weight:700; color:var(--act); }
+  .tier ul { margin:6px 0 0 16px; color:var(--mut); font-size:11.5px; }
+
+  /* food + checklist */
+  .task { display:flex; gap:9px; padding:7px 10px; border-bottom:1px solid var(--line); font-size:12.5px; background:#fff; align-items:flex-start; }
+  .task:first-child { border-top:1px solid var(--line); }
+  .task input { margin-top:4px; accent-color:var(--ok); }
+  .task .tt { flex:1; } .task.done .tt { opacity:.4; text-decoration:line-through; }
+  .task .twhy { color:var(--mut); font-size:11px; }
+  .food { background:#fff; border:1px solid var(--line); margin-bottom:6px; padding:8px 12px; font-size:12.5px; }
+  .food .fn { font-weight:700; } .food .fm { color:var(--mut); font-size:11.5px; margin-top:2px; }
+  .src { font-size:11px; color:var(--mut); margin-top:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="status">
+  <span class="t">🏮 乌镇西栅 · 万无一失攻略</span>
+  <span class="pill warn">退房 12:00 ≠ 离场 12:00</span>
+  <span class="pill ok">景区 09:00–22:00</span>
+  <span style="margin-left:auto"></span>
+  <a href="#system">制度</a><a href="#transit">交通</a><a href="#tl24">动线</a><a href="#shows">时刻表</a><a href="#stay">吃住</a><a href="#exit">离场</a><a href="#pit">防坑</a>
+</div>
+
+<h1>乌镇西栅完全攻略</h1>
+<div class="sub">制度拆解 · 24h 动线 · 演出时刻 · 吃住决策 · 离场死线 —— 对应行程 D4–D5（11/22–23）</div>
+
+<div class="keyrow">
+  <div class="key"><b>¥150</b>西栅门票 · 住景区内含票</div>
+  <div class="key"><b>12:00</b>退房 · 行李托运继续玩</div>
+  <div class="key"><b>350人/天</b>早茶客限额 · check-in 当场约</div>
+  <div class="key"><b>21:00+</b>旅行团退场 · 住客包场时段</div>
+</div>
+<p class="note">核心认知：西栅里<strong>没有民间酒店</strong>——所有住宿都是乌镇旅业直营，订房 = 订「景区官方住宿」，门票/行李/出入证/早茶客全绑在一起。所谓爬文混乱，都是没分清「住内 / 住外」两套规则。</p>
+
+<!-- ============ 制度 ============ -->
+<h2 id="system"><span class="n">01</span>制度一图流<span class="hint">点开每步看细节</span></h2>
+<div class="flow" id="flowSteps">
+  <div class="fstep"><div class="fno">1</div><div class="ft">订房（官网/小程序/抖音/携程）
+    <div class="fd">订的是<b>房型不是房号</b>——「乌镇民宿」是几十栋沿河老宅的统称，check-in 时景区分配楼栋。想要确定房间订有名字的精品酒店（枕水/通安/锦堂）。<br>⚠️ 认准「<b>含西栅门票</b>」房型（2025/3 起按入住人数赠票，青旅床位除外）。妈妈带身份证：60–70 岁优惠票 ¥75、70+ 免票。</div></div></div>
+  <div class="fstep"><div class="fno">2</div><div class="ft">到西栅游客服务中心 check-in（景区外）
+    <div class="fd">不用先买票——入住手续和门票一起在 2 号游客中心前台办：含票房型直接进；不含票的当场买「东西栅联票立减 ¥40」，或加买次日可用的「两日联票」玩东栅。</div></div></div>
+  <div class="fstep"><div class="fno">3</div><div class="ft">行李托运 + 预约早茶客 ⚠️
+    <div class="fd">行李在服务中心交托运（免费送到房间），人空手进园。<br><b>早茶客 check-in 当场就要约</b>——限 350 人/天，次日再约=满额。约到给 ~¥30 消费额度；约不到改吃民宿临河早餐（住客评价其实更好）。</div></div></div>
+  <div class="fstep"><div class="fno">4</div><div class="ft">住宿期间 = 无限次进出
+    <div class="fd">房卡+身份证办临时出入证/人脸识别，住几天进几次。接驳车 24h 免费坐、游览车免费——逛累了随手拦车，妈妈友好。</div></div></div>
+  <div class="fstep"><div class="fno">5</div><div class="ft">退房 12:00 —— 但不是离场
+    <div class="fd">退房后行李交房东/前台 → 托运到出口行李房 → <b>人空手继续玩</b>，玩到下午想走时再去出口领。12 点退房 ≠ 12 点离开乌镇。</div></div></div>
+  <div class="fstep"><div class="fno">6</div><div class="ft">离场领行李 → 下一站
+    <div class="fd">出口行李房凭单领行李。去机场/苏州/天平山的死线见下面「<a href="#exit" style="color:var(--act)">离场决策</a>」。</div></div></div>
+</div>
+
+<!-- ============ 交通 ============ -->
+<h2 id="transit"><span class="n">02</span>怎么去西栅<span class="hint">点开路线看分解 · 含新发现的南浔线</span></h2>
+
+<div class="route"><div class="rh"><span class="rt">A · 包车/顺风车直达（推荐）</span><span class="rc">~1.5h · ¥150–250/车</span><span class="tag ok">最省心</span></div>
+  <div class="rb">
+    <div class="seg"><span class="tm">苏州古城</span><span>酒店门口上车 → 西栅 2 号游客中心下车，门到门零搬运行李</span></div>
+    <div class="seg"><span class="tm">高德/滴滴</span><span>顺风车两人摊下来 ~¥75–125/人，比大巴贵一点但不用去客运站</span></div>
+  </div></div>
+<div class="route"><div class="rh"><span class="rt">B · 客运大巴</span><span class="rc">~1.5–2h · ~¥35–50/人</span><span class="tag fix">便宜</span></div>
+  <div class="rb">
+    <div class="seg"><span class="tm">苏州汽车站</span><span>北广场/汽车南站 → 乌镇汽车站，班次以「巴巴快巴」/携程汽车票当日为准</span></div>
+    <div class="seg"><span class="tm">乌镇汽车站</span><span>→ 西栅景区 ~2km，打车 ¥10 或 K350 公交</span></div>
+  </div></div>
+<div class="route"><div class="rh"><span class="rt">C · 南浔线（XHS 帖路线 · 可顺逛南浔古镇）</span><span class="rc">含游玩 ~5–6h</span><span class="tag warn">想要南浔才值</span></div>
+  <div class="rb">
+    <div class="seg"><span class="tm">苏州古城</span><span>→ 苏州南站（吴江黎里）⚠️ 离古城 ~40km/打车 ~50min——这是本线的代价</span></div>
+    <div class="seg"><span class="tm">苏州南→南浔</span><span>沪苏湖高铁 ~30min · 2024/12 新线，南浔站是新车站</span></div>
+    <div class="seg"><span class="tm">南浔古镇</span><span>古镇大街免费进（2023 起免大门票，小莲庄/张石铭旧宅等单独收费）· 百间楼 UNESCO 建筑群 · 逛 2–3h</span></div>
+    <div class="seg"><span class="tm">南浔→西栅</span><span>🚕 打车 ~20min（官方数据：比桐乡站去乌镇还快）· 🚌 定制班线 ¥20/人 28km ~1h，6 班/日，巴巴快巴购票，末班 16:50 南浔发</span></div>
+    <div class="seg"><span class="tm">判定</span><span>苏州古城出发门到门 ~2.5h+（比包车慢），但<b>多赚一个 UNESCO 古镇</b>。帖主是从上海出发——对他们来说南浔天然顺路。我们从苏州出发，想去南浔古镇才选这条，纯赶路选 A。</span></div>
+  </div></div>
+<div class="route"><div class="rh"><span class="rt">D · 桐乡高铁站线</span><span class="rc">~2h+ · 不推荐从苏州走</span><span class="tag">留档</span></div>
+  <div class="rb">
+    <div class="seg"><span class="tm">苏州→桐乡</span><span>没有直达车要绕杭州/上海，纯折腾。桐乡站→西栅 ~30–40min 打车</span></div>
+    <div class="seg"><span class="tm">谁该用</span><span>从上海/杭州方向来的人。苏州出发直接用 A/B/C。</span></div>
+  </div></div>
+
+<!-- ============ 24h 动线 ============ -->
+<h2 id="tl24"><span class="n">03</span>24h 动线<span class="hint">蓝=演出 · 绿=免费福利 · 金=吃 · 红=死线 · 黄=限时要抢</span></h2>
+<div class="tl-wrap">
+  <div class="tl-col"><h3>Day A · 抵达日下午+夜</h3><div class="tl">
+    <div class="blk b-move"><span class="tm">~15:00</span> <span class="what">游客中心 check-in</span><div class="mt">行李托运 · ⚠️ 当场约明早早茶客 · 办出入证</div></div>
+    <div class="blk"><span class="tm">15:30</span> <span class="what">西栅大街慢逛</span><div class="mt">草木本色染坊（下午光线拍晒布场）· 囍庆堂/老邮局开到 21:00 不急</div></div>
+    <div class="blk b-food"><span class="tm">~17:30</span> <span class="what">晚饭</span><div class="mt">75幢私房菜（鱼头汤+沿河位）/ 锦岸私房菜 / 裕生餐厅</div></div>
+    <div class="blk b-show"><span class="tm">18:30</span> <span class="what">《入梦灵水居》光影水幕秀</span><div class="mt">免费 · 演到 21:00 · 早到占临水位</div></div>
+    <div class="blk b-show"><span class="tm">~19:30</span> <span class="what">摇橹船夜游 ¥60</span><div class="mt">拼船即可 · 灯全亮后船穿桥洞 = 乌镇精髓 · 运营到 21:30</div></div>
+    <div class="blk b-show"><span class="tm">20:00</span> <span class="what">乌镇书场评弹 / 撞巡更打更</span><div class="mt">书场 20:00–20:30 场 · 打更 19–21 沿街随机遇上</div></div>
+    <div class="blk b-free"><span class="tm">21:00+</span> <span class="what">空街夜景二刷 + 白莲塔</span><div class="mt">旅行团退场 = 住客专属时段 · 白莲塔登高到 20:00 注意顺序</div></div>
+  </div></div>
+  <div class="tl-col"><h3>Day B · 次日晨+午</h3><div class="tl">
+    <div class="blk b-free"><span class="tm">06:30</span> <span class="what">清晨薄雾水巷</span><div class="mt">住景区的全部意义 · 9 点前外面游客进不来 = 包场</div></div>
+    <div class="blk b-food"><span class="tm">07:00</span> <span class="what">早茶客 水上市集</span><div class="mt">7:00–9:00 · 预约制 · 临水吃早餐看戏台 = 江南市井</div></div>
+    <div class="blk"><span class="tm">08:00</span> <span class="what">无人老街拍照 / 白莲塔登高</span><div class="mt">或睡回笼觉，节奏自定</div></div>
+    <div class="blk b-peak"><span class="tm">09:30</span> <span class="what">蘑菇屋免费场 ⚠️</span><div class="mt">《向往的生活》原景 · 仅 9:30–10:30 免费 · 现场取号每批 30 人/~20min · 早去排</div></div>
+    <div class="blk"><span class="tm">10:30</span> <span class="what">木心美术馆 ¥20</span><div class="mt">9:00–17:00 · ⚠️ 周一闭馆（11/23 是周一！想去要排 Day A）</div></div>
+    <div class="blk b-dead"><span class="tm">12:00</span> <span class="what">退房</span><div class="mt">行李交房东托运到出口 → 人空手继续玩</div></div>
+    <div class="blk b-food"><span class="tm">12:00+</span> <span class="what">午饭 + 最后一圈</span><div class="mt">滋啦啦萝卜丝饼 ¥3 / 云水边馄饨 / 酱鸭伴手礼</div></div>
+    <div class="blk b-move"><span class="tm">按死线</span> <span class="what">出口领行李离场</span><div class="mt">去机场 ~14:00 · 回苏州可拖到 ~16:00 → 见下方决策器</div></div>
+  </div></div>
+</div>
+<p class="note">⚠️ 周一陷阱：你们 11/23 离场日是<b>周一</b>，木心美术馆闭馆——要看的话只能塞进 Day A 下午（17:00 前）。</p>
+
+<!-- ============ 时刻表 ============ -->
+<h2 id="shows"><span class="n">04</span>全部项目时刻表<span class="hint">点筛选看免费/夜间/限时</span></h2>
+<div class="chips" id="showChips">
+  <span class="chip on" data-f="all">全部</span><span class="chip" data-f="free">免费</span><span class="chip" data-f="night">夜场</span><span class="chip" data-f="limit">限时要抢</span>
+</div>
+<table id="showTbl">
+  <tr><th style="width:26%">项目</th><th style="width:24%">时间</th><th style="width:14%">价</th><th>备注</th></tr>
+  <tr data-t="free night"><td>《入梦灵水居》光影水幕秀</td><td class="num">18:30–21:00</td><td class="free">免费</td><td>18 个光影节点+水幕投影 · 早点去占位</td></tr>
+  <tr data-t=""><td>摇橹船</td><td class="num">7:30–21:30</td><td class="num">¥60/人拼</td><td>包船 ¥480/8人 · 14岁以下 ¥30 · 夜景坐船最值</td></tr>
+  <tr data-t="free"><td>乌镇书场 评弹/评书</td><td class="num">13–15 · 19–19:30 · 20–20:30</td><td class="free">免费</td><td>正场评弹 · 白天+晚上都有 · 苏州评弹在这免费听</td></tr>
+  <tr data-t="free"><td>水上花鼓戏</td><td class="num">11:00 起整点/半点 ~19:30</td><td class="free">免费</td><td>水上戏台 · 桐乡地方戏</td></tr>
+  <tr data-t="free night"><td>露天老电影</td><td class="num">19:00–21:00</td><td class="free">免费</td><td>日月广场 · 16mm 胶片机 · 天气允许</td></tr>
+  <tr data-t="free night"><td>巡更打更</td><td class="num">19:00–21:00</td><td class="free">免费</td><td>西栅大街 · 旧时守夜人巡游</td></tr>
+  <tr data-t="free"><td>鸬鹚捕鱼</td><td class="num">冬 7:30–16:30</td><td class="free">免费</td><td>河道随机遇上</td></tr>
+  <tr data-t="free limit"><td>早茶客（住客专属）</td><td class="num">7:00–9:00</td><td class="free">预约制</td><td>⚠️ 限 350 人/天 · check-in 当场约 · ~¥30 额度</td></tr>
+  <tr data-t="limit"><td>蘑菇屋（向往的生活）</td><td class="num">免费 9:30–10:30 · 消费 11:30–20:30</td><td class="num">免费/消费</td><td>免费场现场取号每批 30 人 · 之后变餐厅需消费</td></tr>
+  <tr data-t=""><td>木心美术馆</td><td class="num">9:00–17:00</td><td class="num">¥20</td><td>⚠️ 周一闭馆</td></tr>
+  <tr data-t="free"><td>白莲塔登高</td><td class="num">8:00–20:00</td><td class="free">免费</td><td>全镇最高点 · 看夜景要 20:00 前上</td></tr>
+  <tr data-t="free"><td>场馆群（囍庆堂/三寸金莲/染坊/邮局）</td><td class="num">8:00–17:00 部分到 21:00</td><td class="free">含门票</td><td>囍庆堂+邮局+灵水居开到 21:00</td></tr>
+  <tr data-t="free"><td>住客 18 项免费服务</td><td class="num">全天</td><td class="free">免费</td><td>摆渡船 · 24h 接驳车 · 行李托运 · 轮椅婴儿车 · 热水直饮</td></tr>
+</table>
+
+<!-- ============ 吃住 ============ -->
+<h2 id="stay"><span class="n">05</span>住宿三档 + 吃<span class="hint">订「含票」房型 · 妈妈记得带身份证查 60+/70+</span></h2>
+<div class="tiers">
+  <div class="tier rec"><h4>⭐ 乌镇民宿（官方散宅）</h4><div class="p">~¥530–700/间 · 套餐含双人票+早</div>
+    <ul><li>百年老宅沿河分布 · 订房型<b>现场分配楼栋</b>（18号民宿这种编号）</li><li>套餐常在抖音/官网：房+2 票+早餐+一项体验</li><li>权益全拿 · 性价比最高</li></ul></div>
+  <div class="tier"><h4>精品酒店（枕水/通安/锦堂）</h4><div class="p">¥800–2000+</div>
+    <ul><li>房间确定不抽盲盒 · 品质稳</li><li>权益同民宿</li><li>想住得讲究选这档</li></ul></div>
+  <div class="tier"><h4>景区外客栈</h4><div class="p">¥250–400</div>
+    <ul><li>❌ 无门票赠送/无出入证/无早茶客资格</li><li>第二天再进要重新买票 ¥150</li><li>带妈妈不推荐——省的钱全是体验</li></ul></div>
+</div>
+<p class="note"></p>
+<div class="food"><span class="fn">75幢私房菜</span>（帖主亲测 · 西栅内网红民宿餐厅）<div class="fm">手写号子排队 · 留电话去逛到号叫你 · 鱼头汤必点 · 葱爆河虾/酱鸭 · 人均 ¥80–100 · 沿河窗位看摇橹船 = 「水边吃饭很惬意」本尊</div></div>
+<div class="food"><span class="fn">锦岸私房菜</span><div class="fm">锦堂行馆码头旁 · 酱骨头/白水鱼/羊肉 · 马云等名流打卡 · 午 11:00–13:30 晚 17:00–20:30</div></div>
+<div class="food"><span class="fn">裕生餐厅</span><div class="fm">安渡坊 1–3 号 · 人均 ¥70–80 · <b>营业到 24:00</b> 看完秀再吃都来得及</div></div>
+<div class="food"><span class="fn">小吃三件套</span><div class="fm">滋啦啦萝卜丝饼 ¥3（限购 2 个/人，10:00–20:30）· 云水边馄饨 ¥15–20 · 书生羊肉面（昭明书院附近）· 酱鸭当伴手礼</div></div>
+<div class="food"><span class="fn">民宿临河早餐</span><div class="fm">没约到早茶客的替代其实不输：馄饨/蛋炒饭/豆浆 + 无人临河位 · 比抢早茶客更松弛</div></div>
+
+<!-- ============ 离场决策 ============ -->
+<h2 id="exit"><span class="n">06</span>离场死线决策器<span class="hint">选下一站 → 看最晚几点走</span></h2>
+<div class="dec" id="exitDec">
+  <label data-v="airport"><input type="radio" name="ex"><span class="dt">✈️ 直接去萧山机场（收尾版 · 19:30 CX963）</span>
+    <span class="dd">直达大巴 ~2h：最晚 <b>14:00–14:30</b> 上车 → ~16:30–17:00 到（-2.5h buffer）· 或桐乡站高铁线 ~1.5h 最晚 ~14:45 出发</span></label>
+  <label data-v="tps"><input type="radio" name="ex"><span class="dt">🍁 接天平山/湿地（原 D4 版）</span>
+    <span class="dd">真死线 <b>13:00–13:30</b>：包车 ~1.3h，要赶 14:00–16:00 枫叶斜射光 + 16:30 停止进场</span></label>
+  <label data-v="sz"><input type="radio" name="ex"><span class="dt">🏨 只回苏州酒店</span>
+    <span class="dd">最松：回苏州末班大巴 ~17:00，可待到 <b>~15:30–16:00</b> 才走，多赚 2h 乌镇下午</span></label>
+</div>
+<div class="verdict" id="exitVerdict" style="display:none"></div>
+
+<!-- ============ 防坑 ============ -->
+<h2 id="pit"><span class="n">07</span>防坑清单<span class="hint">勾掉会自动记住</span></h2>
+<div id="pitList"></div>
+
+<div class="src">来源：乌镇官网票务/入住须知 · 景区官方时刻表 · 浙江省交通厅（南浔-西栅班线）· XHS 实住帖（JnQ Journey 2025/11 入住 ¥529 套餐实测）· 杭州网亲测餐厅 · 去哪儿蘑菇屋打卡攻略。价格班次以出行当日官方为准。</div>
+</div>
+
+<script>
+var $=function(s){return document.querySelector(s)},$$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+
+/* flow steps toggle */
+$$('.fstep').forEach(function(el){el.addEventListener('click',function(){el.classList.toggle('open')})});
+/* route toggle */
+$$('.route .rh').forEach(function(el){el.addEventListener('click',function(){el.parentNode.classList.toggle('open')})});
+
+/* show filter */
+$$('#showChips .chip').forEach(function(c){c.addEventListener('click',function(){
+  $$('#showChips .chip').forEach(function(x){x.classList.remove('on')});c.classList.add('on');
+  var f=c.dataset.f;
+  $$('#showTbl tr[data-t]').forEach(function(r){
+    r.classList.toggle('hide', f!=='all' && r.dataset.t.indexOf(f)<0);
+  });
+})});
+
+/* exit decision */
+var EXIT={
+ airport:'✈️ 收尾版：14:00–14:30 离场最稳。直达大巴 2h → 16:30–17:00 到机场（19:30 起飞 -2.5h）。再晚机场 buffer <2h，塞车有风险。',
+ tps:'🍁 天平山版：13:00–13:30 是真死线——枫叶斜射光 14:00–16:00 + 16:30 停止进场，再晚等于白跑。',
+ sz:'🏨 回苏州版：随便待到 ~15:30–16:00，赶 17:00 末班大巴回苏州即可。12:00 退房后行李托运，下午全是你的。'};
+$$('#exitDec label').forEach(function(l){l.addEventListener('click',function(){
+  $$('#exitDec label').forEach(function(x){x.classList.remove('chosen')});l.classList.add('chosen');
+  l.querySelector('input').checked=true;
+  var v=$('#exitVerdict');v.style.display='block';v.textContent=EXIT[l.dataset.v];
+})});
+
+/* pit checklist (persisted) */
+var PITS=[
+ ['check-in 当场约次日早茶客','限 350 人/天，第二天再约必满'],
+ ['订房认「含西栅门票」房型','青旅床位不赠票；不含票的 check-in 买联票立减 ¥40'],
+ ['妈妈带身份证查 60+/70+','60–70 半价 ¥75 · 70+ 免票（要换票）'],
+ ['木心美术馆周一闭馆','11/23 离场日正好是周一——要看只能 Day A 下午'],
+ ['蘑菇屋免费场只 9:30–10:30','现场取号每批 30 人 · 过了 10:30 要消费进'],
+ ['摇橹船买拼船 ¥60','两人包船 ¥480 不值，凑满 8 人就走'],
+ ['白莲塔登高赶在 20:00 前','夜景想上塔要排在船/光影秀之前'],
+ ['民宿房型现场分配','想要确定房间就订有名字的精品酒店'],
+ ['12:00 退房 ≠ 离场','行李交房东托运出口，玩到下午再走'],
+ ['离场死线先看下一站','机场 14:00 / 天平山 13:00 / 回苏州 ~15:30——选错了整天节奏就错'],
+];
+var KEY='wzPit';
+var saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+var host=$('#pitList');
+PITS.forEach(function(p,i){
+  var d=document.createElement('div');d.className='task'+(saved[i]?' done':'');
+  var cb=document.createElement('input');cb.type='checkbox';cb.checked=!!saved[i];
+  var tt=document.createElement('div');tt.className='tt';tt.textContent=p[0];
+  var wy=document.createElement('div');wy.className='twhy';wy.textContent=p[1];
+  cb.addEventListener('change',function(){saved[i]=cb.checked;d.classList.toggle('done',cb.checked);localStorage.setItem(KEY,JSON.stringify(saved))});
+  d.appendChild(cb);d.appendChild(tt);d.appendChild(wy);host.appendChild(d);
+});
+</script>
+</body>
+</html>
