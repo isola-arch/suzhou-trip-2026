@@ -41,6 +41,8 @@ places:{
    tip:{q:'環湖為底+可選登頂望楓台(+40min石階看楓海) · 11下旬紅楓峰值 · 四大賞楓地',by:'XHS #43',at:''},note:'n1',reelIdx:4},
  p_hqw:{name:'虎丘濕地公園',type:'SEE & DO',ll:[31.3720,120.5900],area:'北郊',durH:3,costY:0,
    tip:{q:'水上紅森林（水杉）· 全平木棧道零台階 · 園區大坐電瓶車¥10–20',by:'候選研究',at:''},note:'n2',reelIdx:6},
+ p_dhs:{name:'定慧寺·古銀杏',type:'SEE & DO',ll:[31.3088,120.6332],area:'雙塔',durH:0.5,costY:0,
+   tip:{q:'免費小寺 · 兩棵幾百年古銀杏 · 攝影圈聖地人少 · 雙塔市集隔壁',by:'銀杏研究',at:''},note:'n2',reelIdx:5},
  p_dqj:{name:'道前街銀杏大道',type:'SEE & DO',ll:[31.3000,120.6150],area:'城南',durH:1,costY:0,
    tip:{q:'整條街銀杏 · 免費街景 · 串文廟+可園 1.5h',by:'XHS #43',at:''},note:'n1',reelIdx:5},
  p_wm:{name:'蘇州文廟',type:'SEE & DO',ll:[31.3020,120.6160],area:'城南',durH:0.75,costY:0,
@@ -161,6 +163,8 @@ seedDays:[
    {k:'c',name:'回酒店休整 → 平江路晚飯',durH:2},
    {k:'p',pid:'f_ppy'}]},
  {label:'D4 · 11/22 日 · 蘇州半日→烏鎮',items:[
+   {k:'p',pid:'f_st'},
+   {k:'p',pid:'p_dhs'},
    {k:'p',pid:'p_dqj'},
    {k:'p',pid:'p_wm'},
    {k:'c',name:'包車→烏鎮西柵 check-in（約早茶客）',durH:1.8},
