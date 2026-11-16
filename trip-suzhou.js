@@ -24,6 +24,8 @@ places:{
    tip:{q:'假山迷宮 · 蘇博隔壁',by:'基準方案',at:''},note:'n2',reelIdx:2},
  p_pjl:{name:'平江路歷史街區',type:'SEE & DO',ll:[31.3170,120.6300],area:'古城東',durH:2,costY:0,
    tip:{q:'銀杏+水巷 · 雞腳旮旯/桂花糖粥小吃',by:'XHS #43',at:''},note:'n1',reelIdx:3},
+ p_ou:{name:'耦園（有時間就逛）',type:'SEE & DO',ll:[31.3195,120.6412],area:'古城東',durH:1,costY:25,
+   tip:{q:'世遺九園裡最安靜的一座 · 「耦」=夫妻並耕，東西雙園 · 後門直通平江路支巷 · 黃石假山孤本',by:'園林表',at:'D2下午彈性段 or D1早到加碼'},note:'n1',reelIdx:3},
  p_gqj:{name:'觀前街',type:'FOOD',ll:[31.3140,120.6240],area:'古城東',durH:1.5,costY:0,
    tip:{q:'松鶴樓/得月樓老字號晚飯圈',by:'基準方案',at:''},note:'n2',reelIdx:3},
  p_hq:{name:'虎丘',type:'SEE & DO',ll:[31.3400,120.5820],area:'西北',durH:2.5,costY:60,
