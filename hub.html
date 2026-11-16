@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>蘇州·烏鎮 11/19–23 · 文件總表</title>
+<style>
+:root{--bg:#faf9f7;--card:#fff;--line:#e5e1d8;--ink:#26251f;--ink2:#57544a;--ink3:#8a8676;
+--mono:"SF Mono","JetBrains Mono","Cascadia Code",Consolas,monospace;
+--sans:"Georgia","Songti TC","Noto Serif TC",serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.7 var(--sans);padding:28px 18px 64px}
+.wrap{max-width:960px;margin:0 auto}
+.kick{font:600 10px var(--mono);letter-spacing:.22em;color:#0369a1;text-transform:uppercase}
+h1{font:700 26px/1.3 var(--sans);margin:6px 0 4px}
+.sub{font:12px var(--mono);color:var(--ink3);margin-bottom:30px}
+h2{font:700 15px var(--sans);margin:30px 0 12px;display:flex;align-items:center;gap:10px}
+h2 .dot{width:9px;height:9px;border-radius:3px;flex:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+  text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px;
+  transition:transform .15s,box-shadow .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(38,37,31,.07);border-color:#d4a017}
+.card .t{font:700 14.5px var(--sans);display:flex;align-items:center;gap:8px}
+.card .d{font:12.5px/1.6 var(--sans);color:var(--ink2);flex:1}
+.card .p{font:10.5px var(--mono);color:var(--ink3);word-break:break-all}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.b{font:700 9px var(--mono);letter-spacing:.08em;border-radius:4px;padding:2px 7px}
+.b.on{background:#e0f2fe;color:#0369a1}.b.loc{background:#f3e8ff;color:#7c3aed}
+.b.ext{background:#fef9c3;color:#a16207}.b.key{background:#dcfce7;color:#15803d}
+.hero{border:1.5px solid #bcd9ee;background:linear-gradient(180deg,#e0f2fe,#f5fafd);
+  border-radius:14px;padding:18px 22px;margin:0 0 8px}
+.hero .tx{font:13px/1.7 var(--sans);color:var(--ink2)}
+.hero .tx b{color:var(--ink)}
+.foot{margin-top:36px;border-top:1px solid var(--line);padding-top:14px;
+  font:10.5px var(--mono);color:var(--ink3);letter-spacing:.03em;line-height:2}
+.foot code{background:#f1efe9;border-radius:4px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="kick">Suzhou · Wuzhen · 2026-11-19 → 11-23 · 2人</div>
+<h1>文件總表</h1>
+<div class="sub">所有重要頁面/文件一頁找齊 · 綠標=核心 · 藍標=線上版 · 紫標=本機檔案 · 黃標=外部連結</div>
+
+<div class="hero">
+  <div class="tx"><b>給媽媽看 → functional.html　｜　自己拖行程 → builder.html　｜　要說服/吵架看證據 → DESIGN_LOG.md</b><br>
+  線上版：<a href="https://isola-arch.github.io/suzhou-trip-2026/hub.html">isola-arch.github.io/suzhou-trip-2026/hub.html</a>（本頁）</div>
+</div>
+
+<h2><span class="dot" style="background:#16a34a"></span>主頁面 · 行程本體</h2>
+<div class="grid">
+  <a class="card" href="functional.html">
+    <div class="t">📋 functional.html</div>
+    <div class="d">全家版行程——逐日時間軸、地圖三視圖、交通/天氣/預算/評彈全部資訊卡。<b>拿給媽媽看的就是這頁。</b></div>
+    <div class="badges"><span class="b key">核心</span><span class="b on">線上+本地</span></div>
+    <div class="p">functional.html · GitHub Pages 同步</div>
+  </a>
+  <a class="card" href="builder.html">
+    <div class="t">🧩 builder.html</div>
+    <div class="d">拖放編輯器——58 個候選點池、半日塊拖進拖出、自動算時間/費用。改天氣改心情改主意的工具。</div>
+    <div class="badges"><span class="b key">核心</span><span class="b on">線上+本地</span></div>
+    <div class="p">builder.html · 吃 trip-suzhou.js</div>
+  </a>
+  <a class="card" href="index.html">
+    <div class="t">🎨 index.html</div>
+    <div class="d">視覺封面頁——行程入口。</div>
+    <div class="badges"><span class="b on">線上+本地</span></div>
+    <div class="p">index.html</div>
+  </a>
+  <a class="card" href="wuzhen-guide.html">
+    <div class="t">🏮 wuzhen-guide.html</div>
+    <div class="d">烏鎮深度攻略——西柵玩法、早茶客預約、住宿/交通細節。</div>
+    <div class="badges"><span class="b on">線上+本地</span></div>
+    <div class="p">wuzhen-guide.html</div>
+  </a>
+  <a class="card" href="planner.html">
+    <div class="t">🗓 planner.html</div>
+    <div class="d">早期規劃頁（保留作對照，主要用 functional + builder）。</div>
+    <div class="badges"><span class="b on">線上+本地</span></div>
+    <div class="p">planner.html</div>
+  </a>
+</div>
+
+<h2><span class="dot" style="background:#d97706"></span>研究檔案 · XHS/視頻筆記</h2>
+<div class="grid">
+  <a class="card" href="xhs-wuzhen-nanxun.html">
+    <div class="t">📕 xhs-wuzhen-nanxun</div><div class="d">烏鎮/南潯 XHS 帖整理。</div>
+    <div class="badges"><span class="b on">線上+本地</span></div><div class="p">xhs-wuzhen-nanxun.html</div>
+  </a>
+  <a class="card" href="xhs-wuzhen2.html">
+    <div class="t">📕 xhs-wuzhen2</div><div class="d">烏鎮 XHS 帖第二輯。</div>
+    <div class="badges"><span class="b on">線上+本地</span></div><div class="p">xhs-wuzhen2.html</div>
+  </a>
+  <a class="card" href="xhs-wuzhen3.html">
+    <div class="t">📕 xhs-wuzhen3</div><div class="d">烏鎮 XHS 帖第三輯。</div>
+    <div class="badges"><span class="b on">線上+本地</span></div><div class="p">xhs-wuzhen3.html</div>
+  </a>
+  <a class="card" href="file:///C:/Users/white/Downloads/sapio-library/index.html">
+    <div class="t">📚 研究筆記庫（XHS + B站）</div>
+    <div class="d">全部已摘錄來源：蘇州賞秋、美食、烏鎮各帖 + B站《蘇州賞秋攻略》影片章節分析（bili-BV1EZ27B8EKG）。</div>
+    <div class="badges"><span class="b loc">本機</span></div>
+    <div class="p">C:\Users\white\Downloads\sapio-library\index.html</div>
+  </a>
+</div>
+
+<h2><span class="dot" style="background:#0ea5e9"></span>決策與學習文檔</h2>
+<div class="grid">
+  <a class="card" href="https://github.com/isola-arch/suzhou-trip-2026/blob/main/DESIGN_LOG.md">
+    <div class="t">📜 DESIGN_LOG.md</div>
+    <div class="d">所有「為什麼」的檔案——世遺辨析、南潯交通糾錯、評彈選場推理、保存最好=真實性/完整性。</div>
+    <div class="badges"><span class="b key">核心</span><span class="b ext">GitHub</span></div>
+    <div class="p">repo/DESIGN_LOG.md（同目錄本地檔）</div>
+  </a>
+  <a class="card" href="file:///D:/App%20development/Antigravity/SynthesisedNoteApp/SapioV2/docs/learning/shanghai-day1/shanghai-day1-reader-2026-11-12.html">
+    <div class="t">📖 上海 Day1 圖解</div>
+    <div class="d">外灘認樓圖、南京路百年時間軸、黃魚麵判定、<b>老字號手信一條街</b>、2.5h 實戰走位。</div>
+    <div class="badges"><span class="b loc">本機</span></div>
+    <div class="p">SapioV2\docs\learning\shanghai-day1\…reader.html</div>
+  </a>
+  <a class="card" href="https://github.com/isola-arch/suzhou-trip-2026/blob/main/trip-suzhou.js">
+    <div class="t">🗃 trip-suzhou.js</div>
+    <div class="d">資料層——58 個候選點（座標/時長/價/考據tip）+ seedDays。builder 的唯一數據源。</div>
+    <div class="badges"><span class="b ext">GitHub</span></div>
+    <div class="p">repo/trip-suzhou.js（同目錄本地檔）</div>
+  </a>
+</div>
+
+<h2><span class="dot" style="background:#ec4899"></span>外部 · 要用的時候直接點</h2>
+<div class="grid">
+  <a class="card" href="https://github.com/isola-arch/suzhou-trip-2026">
+    <div class="t">💾 GitHub repo</div><div class="d">版本控制+Pages 託管源。</div>
+    <div class="badges"><span class="b ext">外部</span></div><div class="p">github.com/isola-arch/suzhou-trip-2026</div>
+  </a>
+  <a class="card" href="https://www.bilibili.com/video/BV1EZ27B8EKG/">
+    <div class="t">📺 B站·蘇州賞秋攻略</div><div class="d">12:41 · 天平山/虎丘/濕地/園林/免費點/寺廟七章 · 出發前看「免費地點」章補漏。</div>
+    <div class="badges"><span class="b ext">外部</span></div><div class="p">BV1EZ27B8EKG · 隔壁刘同学Zzz</div>
+  </a>
+  <a class="card" href="https://www.12306.cn/">
+    <div class="t">🚄 12306</div><div class="d">D4 前一周查「蘇州→湖州南潯」直通車班次；滬寧城際隨到隨走不用提前。</div>
+    <div class="badges"><span class="b ext">外部</span></div><div class="p">南潯線才用 · 死線 ~11/15</div>
+  </a>
+</div>
+
+<div class="foot">
+本地根目錄：<code>D:\App development\Antigravity\SynthesisedNoteApp\travel\suzhou-wuzhen-2026-11\</code><br>
+研究筆記庫：<code>C:\Users\white\Downloads\sapio-library\notes\</code>（bili-BV1EZ27B8EKG-suzhou-autumn 等）<br>
+學習文檔：<code>SapioV2\docs\learning\shanghai-day1\</code>（reader.html 圖解 + 01-*.md 全文）<br>
+最後整理 2026-11-16
+</div>
+
+</div>
+</body>
+</html>
