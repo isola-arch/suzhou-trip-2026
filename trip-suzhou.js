@@ -61,7 +61,11 @@ places:{
  p_th:{name:'太湖東山',type:'SEE & DO',ll:[31.0600,120.4300],area:'太湖',durH:4,costY:0,
    tip:{q:'陸巷古村+採橘季+太湖三白 · 跟烏鎮水鄉有重複',by:'候選研究',at:''},note:'n2',reelIdx:12},
  p_wz:{name:'烏鎮西柵',type:'SEE & DO',ll:[30.7443,120.4918],area:'烏鎮',durH:6,costY:150,
-   tip:{q:'夜景精華 · 住景區內含聯票+早茶客 · 晨景是回程前最後甜頭',by:'基準方案',at:''},note:'n2',reelIdx:13},
+   tip:{q:'住景區內贈票+早茶客+行李托運 · 18:30光影秀+夜船=精髓 · 攻略見 wuzhen-guide',by:'烏鎮研究',at:''},note:'n2',reelIdx:13},
+ p_nx:{name:'南潯古鎮',type:'SEE & DO',ll:[30.8750,120.4260],area:'南潯',durH:3,costY:0,
+   tip:{q:'古鎮大街永久免費 · 百間樓UNESCO中西合璧 · 收費宅子選逛 · 班線¥20接西柵或打車20min',by:'南潯研究',at:''},note:'n2',reelIdx:24},
+ p_tl:{name:'同里古鎮',type:'SEE & DO',ll:[31.1600,120.7200],area:'同里',durH:3,costY:80,
+   tip:{q:'地鐵4號線直達同里站 · 早8前/晚17後免費進 · 退思園世遺 · ⚠11月夜遊關閉 · 跟烏鎮同物種可跳',by:'候選研究',at:''},note:'n2',reelIdx:25},
  /* ---- 上海 ---- */
  p_dbt:{name:'大白兔旗艦店',type:'FOOD',ll:[31.2360,121.4780],area:'南京路',durH:0.5,costY:0,
    tip:{q:'南京東路409號 · 散稱~¥59/斤 · 奶茶店371號 · 媽指定🐰',by:'家人',at:''},note:'n3',reelIdx:0},
@@ -108,6 +112,8 @@ places:{
    tip:{q:'滾動場19:00–21:00隨到隨聽 · 名段集錦+字幕對遊客友好 · ¥50–150 · 當有戲的休息站',by:'評彈研究',at:''},note:'n4',reelIdx:5},
  f_st:{name:'雙塔市集',type:'FOOD',ll:[31.3080,120.6340],area:'城南',durH:1,costY:40,
    tip:{q:'網紅改造菜場 · 早餐/小吃一條龍 · 離平江路南端近',by:'候選研究',at:''},note:'n4',reelIdx:6},
+ f_75:{name:'75幢私房菜（西柵內）',type:'FOOD',ll:[30.7440,120.4930],area:'烏鎮',durH:1.2,costY:90,
+   tip:{q:'沿河位看搖櫓船 · 魚頭湯必點 · 手寫號排隊留電話到號叫回 · 人均¥80–100',by:'XHS帖+親測文',at:''},note:'n4',reelIdx:7},
  /* ---- 住宿候選 ---- */
  h_meiqi:{name:'美栖 MEIQI（臨頓路142-1號）',type:'STAY',ll:[31.3130,120.6285],area:'古城東',durH:0.5,costY:498,
    tip:{q:'✅雙首選 · 2025新開4.9/1099·Trip9.8 · 平江路<100m觀前街210m · 臨頓路本路車到門口 · 免費接站+健身房+Dyson+機器人 · 訂可取消房到店驗收',by:'酒店研究',at:''},note:'n2',reelIdx:22},
@@ -142,25 +148,25 @@ seedDays:[
    {k:'p',pid:'p_pjl'},
    {k:'p',pid:'p_szl'},
    {k:'p',pid:'p_gqj'}]},
- {label:'D3 · 11/21 六 · 城西線→烏鎮',items:[
-   {k:'p',pid:'p_hq'},
+ {label:'D3 · 11/21 六 · 西郊大線',items:[
+   {k:'c',name:'打車→天平山頂門（~40min）',durH:0.7},
+   {k:'p',pid:'p_tps'},
    {k:'p',pid:'p_hss'},
    {k:'p',pid:'p_xys'},
-   {k:'p',pid:'p_ly'},
-   {k:'c',name:'退房→大巴/包車去烏鎮',durH:1.5},
-   {k:'p',pid:'p_wz'}]},
- {label:'D4 · 11/22 日 · 烏鎮晨→賞秋→蘇州',items:[
-   {k:'c',name:'西柵清晨/早茶客',durH:1.5},
-   {k:'c',name:'包車 烏鎮→天平山（行李跟車）',durH:1.3},
-   {k:'p',pid:'p_tps'},
-   {k:'p',pid:'p_md'},
-   {k:'c',name:'回蘇州·觀前街續住第三晚',durH:0.75}]},
- {label:'D5 · 11/23 一 · 蘇州→HGH→回港',items:[
+   {k:'p',pid:'p_hq'},
+   {k:'p',pid:'p_stj'}]},
+ {label:'D4 · 11/22 日 · 蘇州半日→烏鎮',items:[
    {k:'p',pid:'p_dqj'},
    {k:'p',pid:'p_wm'},
-   {k:'c',name:'退房→蘇州站',durH:0.5},
-   {k:'p',pid:'p_szz'},
-   {k:'p',pid:'p_hzd'},
+   {k:'c',name:'包車→烏鎮西柵 check-in（約早茶客）',durH:1.8},
+   {k:'p',pid:'f_75'},
+   {k:'p',pid:'p_wz'},
+   {k:'c',name:'18:30 光影秀→19:30 夜船→書場評彈',durH:3}]},
+ {label:'D5 · 11/23 一 · 烏鎮晨→HGH→回港',items:[
+   {k:'c',name:'清晨薄霧 + 早茶客 7:00',durH:2},
+   {k:'c',name:'蘑菇屋免費場 9:30 / 補漏',durH:1.5},
+   {k:'c',name:'退房·行李托運·午飯',durH:1.5},
+   {k:'c',name:'烏鎮→蕭山機場（大巴2h/桐鄉高鐵線）',durH:2.5},
    {k:'p',pid:'p_hgh'},
    {k:'c',name:'CX963 HGH→HKG',durH:2.7}]},
 ]};
