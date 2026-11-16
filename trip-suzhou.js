@@ -144,18 +144,20 @@ seedDays:[
    {k:'p',pid:'p_szz'},
    {k:'c',name:'打車→平江路酒店 check-in（¥20/15min，別拖箱換乘）',durH:0.5},
    {k:'c',name:'觀前街晚飯 18:15–19:15',durH:1}]},
- {label:'D2 · 11/20 五 · 古城核心+虎丘山塘',items:[
+ {label:'D2 · 11/20 五 · 古城三件套+山塘夜',items:[
    {k:'p',pid:'p_zz'},
    {k:'p',pid:'p_sbm'},
    {k:'p',pid:'p_szl'},
-   {k:'p',pid:'p_hq'},
+   {k:'c',name:'下午彈性：平江路/耦園/休息（給 D3 留電）',durH:2.5},
    {k:'p',pid:'p_stj'}]},
- {label:'D3 · 11/21 六 · 賞楓線+評彈夜',items:[
-   {k:'c',name:'打車→天平山頂門（~40min）',durH:0.7},
+ {label:'D3 · 11/21 六 · 天平山→虎丘→城西一路收+評彈夜',items:[
+   {k:'c',name:'06:30 打車→天平山（賞楓季 7:00 開門 · 前晚約車）',durH:0.5},
    {k:'p',pid:'p_tps'},
-   {k:'p',pid:'p_hss'},
+   {k:'c',name:'打車→虎丘（~30min）',durH:0.5},
+   {k:'p',pid:'p_hq'},
    {k:'p',pid:'p_xys'},
    {k:'p',pid:'p_ly'},
+   {k:'p',pid:'p_hss'},
    {k:'c',name:'回酒店休整 → 平江路晚飯',durH:2},
    {k:'p',pid:'f_ppy'}]},
  {label:'D4 · 11/22 日 · 蘇州半日→烏鎮',items:[
