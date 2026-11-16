@@ -38,7 +38,7 @@ places:{
    tip:{q:'夜景為主 · 搖櫓船~¥50 · 虎丘→閶門一線',by:'基準方案',at:''},note:'n2',reelIdx:5},
  /* ---- 賞秋專項 ---- */
  p_tps:{name:'天平山',type:'SEE & DO',ll:[31.2535,120.5150],area:'木瀆',durH:3.5,costY:30,
-   tip:{q:'南門→十景塘→古楓林環湖 · 11下旬紅楓峰值 · 四大賞楓地',by:'XHS #43',at:''},note:'n1',reelIdx:4},
+   tip:{q:'環湖為底+可選登頂望楓台(+40min石階看楓海) · 11下旬紅楓峰值 · 四大賞楓地',by:'XHS #43',at:''},note:'n1',reelIdx:4},
  p_hqw:{name:'虎丘濕地公園',type:'SEE & DO',ll:[31.3720,120.5900],area:'北郊',durH:3,costY:0,
    tip:{q:'水上紅森林（水杉）· 全平木棧道零台階 · 園區大坐電瓶車¥10–20',by:'候選研究',at:''},note:'n2',reelIdx:6},
  p_dqj:{name:'道前街銀杏大道',type:'SEE & DO',ll:[31.3000,120.6150],area:'城南',durH:1,costY:0,
