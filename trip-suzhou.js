@@ -110,6 +110,8 @@ places:{
    tip:{q:'宮巷第一天門 · 蘇州評彈團正統書場 · 老聽客追連載 · 夜場要查公眾號排期',by:'評彈研究',at:''},note:'n4',reelIdx:4},
  f_tea:{name:'平江路評彈茶館',type:'SEE & DO',ll:[31.3165,120.6305],area:'古城東',durH:1.5,costY:80,
    tip:{q:'滾動場19:00–21:00隨到隨聽 · 名段集錦+字幕對遊客友好 · ¥50–150 · 當有戲的休息站',by:'評彈研究',at:''},note:'n4',reelIdx:5},
+ f_ppy:{name:'琵琶語評彈茶館（吳亮瑩場）',type:'SEE & DO',ll:[31.3140,120.6300],area:'古城東',durH:1.5,costY:150,
+   tip:{q:'⭐11/21六有吳老師場 · 《秦淮景》原唱（金陵十三釵）· 平江路旁 · 場次要查大眾點評/美團提前訂位 · 晚場約19:30–20:30',by:'用戶情報',at:''},note:'n4',reelIdx:8},
  f_st:{name:'雙塔市集',type:'FOOD',ll:[31.3080,120.6340],area:'城南',durH:1,costY:40,
    tip:{q:'網紅改造菜場 · 早餐/小吃一條龍 · 離平江路南端近',by:'候選研究',at:''},note:'n4',reelIdx:6},
  f_75:{name:'75幢私房菜（西柵內）',type:'FOOD',ll:[30.7440,120.4930],area:'烏鎮',durH:1.2,costY:90,
@@ -142,19 +144,20 @@ seedDays:[
    {k:'p',pid:'p_szz'},
    {k:'c',name:'打車→平江路酒店 check-in（¥20/15min，別拖箱換乘）',durH:0.5},
    {k:'c',name:'觀前街晚飯 18:15–19:15',durH:1}]},
- {label:'D2 · 11/20 五 · 古城核心',items:[
+ {label:'D2 · 11/20 五 · 古城核心+虎丘山塘',items:[
    {k:'p',pid:'p_zz'},
    {k:'p',pid:'p_sbm'},
-   {k:'p',pid:'p_pjl'},
    {k:'p',pid:'p_szl'},
-   {k:'p',pid:'p_gqj'}]},
- {label:'D3 · 11/21 六 · 西郊大線',items:[
+   {k:'p',pid:'p_hq'},
+   {k:'p',pid:'p_stj'}]},
+ {label:'D3 · 11/21 六 · 賞楓線+評彈夜',items:[
    {k:'c',name:'打車→天平山頂門（~40min）',durH:0.7},
    {k:'p',pid:'p_tps'},
    {k:'p',pid:'p_hss'},
    {k:'p',pid:'p_xys'},
-   {k:'p',pid:'p_hq'},
-   {k:'p',pid:'p_stj'}]},
+   {k:'p',pid:'p_ly'},
+   {k:'c',name:'回酒店休整 → 平江路晚飯',durH:2},
+   {k:'p',pid:'f_ppy'}]},
  {label:'D4 · 11/22 日 · 蘇州半日→烏鎮',items:[
    {k:'p',pid:'p_dqj'},
    {k:'p',pid:'p_wm'},
