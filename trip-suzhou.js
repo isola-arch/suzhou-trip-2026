@@ -33,7 +33,7 @@ places:{
  p_hss:{name:'寒山寺+楓橋',type:'SEE & DO',ll:[31.3090,120.5680],area:'城西',durH:1.5,costY:20,
    tip:{q:'敲鐘¥5 · 楓橋夜泊原址在寺外免費',by:'XHS #43',at:''},note:'n1',reelIdx:1},
  p_xys:{name:'西園寺',type:'SEE & DO',ll:[31.3170,120.5850],area:'城西',durH:1.5,costY:5,
-   tip:{q:'巨型銀杏全黃+落葉地毯 · 素麵¥15解決午餐 · 滿院貓',by:'XHS #43',at:''},note:'n1',reelIdx:2},
+   tip:{q:'巨型銀杏+素麵¥15（15:00停售）+滿院貓 · 五百羅漢堂數羅漢解籤 · 流通處買陳皮話梅',by:'XHS #43',at:''},note:'n1',reelIdx:2},
  p_ly:{name:'留園',type:'SEE & DO',ll:[31.3190,120.5880],area:'城西',durH:2,costY:55,
    tip:{q:'16:00前到等日落金光穿廊 · 紅楓當季',by:'基準方案',at:''},note:'n2',reelIdx:4},
  p_stj:{name:'七里山塘',type:'SEE & DO',ll:[31.3220,120.5960],area:'西北',durH:1.5,costY:0,
