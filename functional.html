@@ -96,6 +96,8 @@
   .task .lk { font-size:11px; white-space:nowrap; }
 
   /* copy buttons */
+  .pinloc { font:11px inherit; border:1px solid var(--line); background:#fff; color:var(--mut); border-radius:3px; padding:0 4px; margin-right:5px; cursor:pointer; vertical-align:1px; }
+  .pinloc:hover { color:var(--act); border-color:var(--act); }
   .cp { font:11px inherit; border:1px solid var(--line); background:#fff; color:var(--mut);
         padding:0 6px; border-radius:4px; cursor:pointer; margin-left:6px; vertical-align:1px; }
   .cp:hover { color:var(--act); border-color:var(--act); }
@@ -107,7 +109,7 @@
     .cols { grid-template-columns:1fr; } .day .st .tm { min-width:70px; }
     .wrap { padding:0 10px 40px; }
     table { font-size:11.5px; } td, th { padding:5px 6px; }
-    #gmap { height:230px; }
+    #gmap { height:290px; }
     .status { font-size:11.5px; gap:4px 10px; }
     h1 { font-size:17px; }
     .dyl { flex-wrap:wrap; } .dseg { flex:1 1 42%; } .darr { display:none; }
@@ -194,20 +196,20 @@
 <h2 id="s03"><span class="n">03</span>预订清单 · 按紧急度<span class="hint" id="prepProg">打勾存档</span></h2>
 <div class="dec" id="prep"></div>
 
-<div class="zone">⓶ 行程 · 现场执行<span class="zlinks"><a href="#s04">分日</a>·<a href="#s05">加点</a>·<a href="#s06">地图</a>·<a href="#s07">功课</a>·<a href="#s08">地名</a></span></div>
+<div class="zone">⓶ 行程 · 现场执行<span class="zlinks"><a href="#s06">地图</a>·<a href="#s04">分日</a>·<a href="#s05">加点</a>·<a href="#s07">功课</a>·<a href="#s08">地名</a></span></div>
 
-<h2 id="s04"><span class="n">04</span>分日行程<span class="hint" id="planmode">随 01 的去程选择自动切换</span></h2>
-<div id="days"></div>
-
-<h2 id="s05"><span class="n">05</span>顺路加点 · 中途站 & 在地美食<span class="hint">美食源：小红书帖（含商家自荐，已标注）</span></h2>
-<table id="stops"></table>
-<table id="eats" style="margin-top:6px"></table>
-<div class="note">⚠ 避雷（商家号帖整理的常识项，已交叉验证可靠）：平江路/山塘街主街不买高价丝绸特产（溢价高，买老字号）· 门口拉客游船/一日游不选（坐船走官方码头）· 拙政园/苏博提前预约，现场基本无余票 · 汉服租赁查破损/配饰/还衣违约金 · 古城街巷窄，短途步行/共享单车比打车快</div>
-
-<h2 id="s06"><span class="n">06</span>地图 · 古城 / 全程<span class="hint">pin 约位 · 点 pin 看要点+跳功课 · 导航用 <a href="#s08">08 地名表</a></span></h2>
+<h2 id="s06"><span class="n">04</span>地图 · 古城 / 全程<span class="hint">pin 约位 · 点 pin 看要点+跳功课 · 行程行/地名表的 📍 直接飞到这里</span></h2>
 <div class="maptog"><button class="on" data-v="city">苏州古城</button><button data-v="sh">上海 D1</button><button data-v="route">全程路线</button></div>
 <div id="gmap"></div>
 <div class="glegend"><span><i style="background:#16a34a"></i>园林</span><span><i style="background:#7c3aed"></i>寺·馆</span><span><i style="background:#2563eb"></i>街区/夜市</span><span><i style="background:#d97706"></i>水乡</span><span><i style="background:#0ea5e9"></i>杭州</span><span><i style="background:#64748b"></i>交通</span><span><i style="background:#ec4899"></i>美食</span><span>· 滚轮缩放已关，双击缩放</span></div>
+
+<h2 id="s04"><span class="n">05</span>分日行程<span class="hint" id="planmode">随 01 的去程选择自动切换 · 行首 📍 飞到 04 地图</span></h2>
+<div id="days"></div>
+
+<h2 id="s05"><span class="n">06</span>顺路加点 · 中途站 & 在地美食<span class="hint">美食源：小红书帖（含商家自荐，已标注）</span></h2>
+<table id="stops"></table>
+<table id="eats" style="margin-top:6px"></table>
+<div class="note">⚠ 避雷（商家号帖整理的常识项，已交叉验证可靠）：平江路/山塘街主街不买高价丝绸特产（溢价高，买老字号）· 门口拉客游船/一日游不选（坐船走官方码头）· 拙政园/苏博提前预约，现场基本无余票 · 汉服租赁查破损/配饰/还衣违约金 · 古城街巷窄，短途步行/共享单车比打车快</div>
 
 <h2 id="s07"><span class="n">07</span>园林功课 · 按朝代逛<span class="hint">四大名园 = 宋元明清 · 点朝代块跳对应行 · 红必/蓝荐</span></h2>
 <div class="dyl">
@@ -678,6 +680,7 @@ function renderDays(){
         }).join("")+
         '<div class="dn">◦ '+esc(d.note)+'</div></div>';
     }).join("");
+    if(window.decorateMapLinks)window.decorateMapLinks();
   }catch(e){}
 }
 renderDays();
@@ -927,7 +930,7 @@ var PLACES=[
 try{
   var TC={g:"#16a34a",t:"#7c3aed",s:"#2563eb",x:"#64748b",w:"#d97706",h:"#0ea5e9"};
   el("places").innerHTML='<tr><th>名称</th><th>票价</th><th>要点</th></tr>'+PLACES.map(function(p){
-    return '<tr><td><i class="tdot" style="background:'+(TC[p[3]]||"#999")+'"></i><b>'+esc(p[0])+'</b>'+(p[4]?'<span class="tag must">必</span>':"")+'<button class="cp" data-n="'+esc(p[0])+'">⧉</button></td><td class="num">'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';
+    return '<tr><td><i class="tdot" style="background:'+(TC[p[3]]||"#999")+'"></i><b>'+esc(p[0])+'</b>'+(p[4]?'<span class="tag must">必</span>':"")+'<button class="pinloc" data-pin="'+esc(p[0])+'">📍</button><button class="cp" data-n="'+esc(p[0])+'">⧉</button></td><td class="num">'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';
   }).join("");
   el("places").addEventListener("click",function(ev){
     var b=ev.target.closest(".cp");if(!b)return;
@@ -1028,17 +1031,20 @@ var RPINS=[
 try{
   if(window.L){
     var cmap=L.map("gmap",{scrollWheelZoom:false}).setView([31.315,120.612],13);
+    var MK={},PINNAMES=[];
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"&copy; OSM"}).addTo(cmap);
     var CC={g:"#16a34a",t:"#7c3aed",s:"#2563eb",x:"#64748b",w:"#d97706",h:"#0ea5e9",f:"#ec4899"};
     var GSET={};GARDENS.forEach(function(g){GSET[g[0]]=1;});
     var cityL=L.layerGroup(),routeL=L.layerGroup();
     PINS.forEach(function(p){
-      L.circleMarker([p[1],p[2]],{radius:7,fillColor:CC[p[3]]||"#888",color:"#fff",weight:2,fillOpacity:.9})
+      var m=L.circleMarker([p[1],p[2]],{radius:7,fillColor:CC[p[3]]||"#888",color:"#fff",weight:2,fillOpacity:.9})
        .addTo(cityL).bindPopup("<b>"+p[0]+"</b><br>"+p[4]+(GSET[p[0]]?'<br><a href="#g-'+p[0]+'">→ 园林功课</a>':""));
+      MK[p[0]]={m:m,v:"city"};
     });
     RPINS.forEach(function(p){
-      L.circleMarker([p[1],p[2]],{radius:7,fillColor:CC[p[3]]||"#888",color:"#fff",weight:2,fillOpacity:.9})
+      var m=L.circleMarker([p[1],p[2]],{radius:7,fillColor:CC[p[3]]||"#888",color:"#fff",weight:2,fillOpacity:.9})
        .addTo(routeL).bindPopup("<b>"+p[0]+"</b><br>"+p[4]);
+      MK[p[0]]={m:m,v:"route"};
     });
     L.polyline([[31.3330,120.6230],[30.7443,120.4918],[31.1900,120.5000],[31.3330,120.6230],[30.2917,120.2128],[30.2295,120.4344]],{color:"#d97706",weight:2.5,dashArray:"6 6",opacity:.8}).addTo(routeL);
     /* D1 上海段：PVG → 磁浮/2号线 → 南京东路 → 回虹桥 → 苏州 */
@@ -1079,6 +1085,35 @@ try{
         }
       });
     });
+    PINNAMES=Object.keys(MK).sort(function(a,b){return b.length-a.length;});
+    document.querySelectorAll(".pinloc").forEach(function(b){if(!MK[b.getAttribute("data-pin")])b.style.display="none";});
+    window.showOnMap=function(name){
+      var e=MK[name];if(!e)return;
+      var btn=document.querySelector('.maptog button[data-v="'+e.v+'"]');
+      if(btn&&!btn.classList.contains("on"))btn.click();
+      cmap.flyTo(e.m.getLatLng(),Math.max(cmap.getZoom(),15),{duration:.6});
+      var opened=false,op=function(){if(!opened){opened=true;e.m.openPopup();}};
+      cmap.once("moveend",op);setTimeout(op,900);
+      document.getElementById("gmap").scrollIntoView({behavior:"smooth",block:"center"});
+    };
+    window.decorateMapLinks=function(){
+      if(!PINNAMES.length)return;
+      document.querySelectorAll("#days .st .bd").forEach(function(bd){
+        if(bd.querySelector(".pinloc"))return;
+        var t=bd.textContent;
+        for(var i=0;i<PINNAMES.length;i++){
+          if(t.indexOf(PINNAMES[i])>=0){
+            bd.insertAdjacentHTML("afterbegin",'<button class="pinloc" data-pin="'+PINNAMES[i]+'">📍</button>');
+            break;
+          }
+        }
+      });
+    };
+    document.addEventListener("click",function(ev){
+      var b=ev.target.closest(".pinloc");if(!b)return;
+      ev.preventDefault();window.showOnMap(b.getAttribute("data-pin"));
+    });
+    window.decorateMapLinks();
   }
 }catch(e){}
 </script>

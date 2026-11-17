@@ -40,7 +40,7 @@
   @media(max-width:900px){.layout{grid-template-columns:1fr}.planpanel{position:fixed!important;
     right:0;top:54px;bottom:0;width:min(430px,94vw);transform:translateX(100%);transition:.3s}
     .planpanel.open{transform:none;box-shadow:-8px 0 30px rgba(0,0,0,.6)}}
-  .main{padding:18px 20px 80px;overflow-y:auto}
+  .main{padding:0 20px 80px;overflow-y:auto}
   .planpanel{border-left:1px solid #222;background:#121213;padding:16px;overflow-y:auto;
              position:relative;z-index:700}
   @media(max-width:900px){.planpanel{background:#131315}}
@@ -75,9 +75,24 @@
   .place .add:hover{transform:scale(1.15)}
   .place .add.in{background:#2a3d2a;color:#9fe6a0}
   .place.dim{opacity:.4}
-  .libmap{height:240px;border-radius:12px;border:1px solid #333;margin-top:10px}
+  .mapwrap{position:sticky;top:0;z-index:60;background:#0f0f10;margin:0 -20px;padding:12px 20px 10px}
+  .libmap{height:280px;border-radius:12px;border:1px solid #333;margin-top:6px}
+  @media(max-width:900px){.libmap{height:32vh;min-height:190px}}
+  .mapreset{float:right;font-size:10px;background:#191a1c;border:1px solid #333;color:#9a978f;
+            border-radius:7px;padding:3px 9px;cursor:pointer;letter-spacing:0}
+  .mapreset:hover{border-color:#e8764f;color:#e8764f}
   .num-pin{background:#e8764f;color:#fff;border:2px solid #fff;border-radius:50%;width:24px!important;
            height:24px!important;font:700 11px/20px sans-serif;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .num-pin.sel{width:32px!important;height:32px!important;font-size:13px;line-height:28px;
+           border-color:#ffe6d9;box-shadow:0 0 0 4px rgba(232,118,79,.35),0 1px 8px rgba(0,0,0,.6)}
+  .place .pin{position:absolute;top:9px;right:38px;width:24px;height:24px;border-radius:50%;
+              background:#241f16;color:#e8b44f;border:1px solid #4a3f28;font-size:11px;line-height:1;
+              cursor:pointer;transition:.15s;padding:0}
+  .place .pin:hover{background:#e8b44f;color:#111}
+  .place.flash{border-color:#e8764f;box-shadow:0 0 0 3px rgba(232,118,79,.35)}
+  .loc{border:1px solid #4a3f28;background:#241f16;color:#e8b44f;border-radius:6px;
+       font-size:10px;padding:0 5px;cursor:pointer;margin-left:4px;line-height:1.6;display:inline-block}
+  .loc:hover{background:#e8b44f;color:#111}
   .planname{font-size:15px;font-weight:700;border-bottom:1px dashed #333;padding-bottom:8px}
   .planname input{background:none;border:0;color:#e8e6e1;font:inherit;width:100%;outline:none}
   .plansum{font-size:11px;color:#9a978f;margin:6px 0 4px}
@@ -225,12 +240,14 @@
 </div>
 <div class="layout">
   <div class="main">
+    <div class="mapwrap">
+      <div class="sec-title" style="margin-top:0">地圖 — 點卡 📍 或 pin 雙向飛<button class="mapreset" onclick="fitAll()">⤢ 全覽</button></div>
+      <div class="libmap" id="libmap"></div>
+    </div>
     <div class="sec-title">來源 notes — 點卡 filter，或「整條加入」做 bundle</div>
     <div class="notes" id="notes"></div>
     <div class="sec-title">Places pool — 點 + 加入行程</div>
     <div class="places" id="places"></div>
-    <div class="sec-title">地圖</div>
-    <div class="libmap" id="libmap"></div>
   </div>
   <div class="planpanel" id="planpanel">
     <div class="planname"><input id="tripname"></div>
@@ -271,7 +288,7 @@ load();
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
   clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);}
-function icon(n){return L.divIcon({className:'',html:'<div class="num-pin">'+n+'</div>',iconSize:[24,24],iconAnchor:[12,12]});}
+function icon(n,sel){return L.divIcon({className:'',html:'<div class="num-pin'+(sel?' sel':'')+'">'+n+'</div>',iconSize:[sel?32:24,sel?32:24],iconAnchor:[sel?16:12,sel?16:12]});}
 function havKm(a,b){const R=6371,r=Math.PI/180,dLa=(b[0]-a[0])*r,dLo=(b[1]-a[1])*r;
   const x=Math.sin(dLa/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dLo/2)**2;
   return 2*R*Math.asin(Math.sqrt(x));}
@@ -387,10 +404,11 @@ function renderPlaces(){
   const hid=Object.keys(PLACES).filter(pid=>selNote&&PLACES[pid].note!==selNote);
   document.getElementById('places').innerHTML=vis.concat(hid).map(pid=>{
     const p=PLACES[pid],inP=stopInPlan(pid),nt=NOTES.find(n=>n.id===p.note);
-    return `<div class="place ${hid.includes(pid)?'dim':''}">
+    return `<div class="place ${hid.includes(pid)?'dim':''}" data-pid="${pid}">
       <div class="ptype">${p.type}</div>
       <div class="pname">${p.name}</div>
       <div class="psrc">來自 <b>${nt.title.split(' ')[0]}</b> · ${p.durH}h · ${p.area}</div>
+      <button class="pin" onclick="event.stopPropagation();locate('${pid}')" title="地圖定位">📍</button>
       <button class="add ${inP?'in':''}" onclick="addStop('${pid}',this)">${inP?'✓':'+'}</button>
     </div>`;
   }).join('');
@@ -467,7 +485,7 @@ function stopRow(pid,d,i,ctx,arr){
   const updown=`<span class="updn"><button onclick="event.stopPropagation();moveItem(${d},${i},-1)">▲</button><button onclick="event.stopPropagation();moveItem(${d},${i},1)">▼</button></span>`;
   return `<div class="pstop" data-d="${d}" data-it="${i}"><span class="grip">⠿</span><div class="spine"><div class="tarr">${arr!==undefined?clk(arr):'·'}</div></div>
     <div class="body"><button class="del" onclick="delItem(${d},${i})">✕</button>
-      <b>${p.name}</b><div class="pm">${durOv[pid]?`<b class="durmod">${durOf(pid)}h改</b>`:`${p.durH}h`} · ${p.costY?'~'+CUR+p.costY:'免費'}<span class="est">估</span></div>
+      <b>${p.name}</b><div class="pm">${durOv[pid]?`<b class="durmod">${durOf(pid)}h改</b>`:`${p.durH}h`} · ${p.costY?'~'+CUR+p.costY:'免費'}<span class="est">估</span><span class="loc" onclick="event.stopPropagation();locate('${pid}')" title="地圖定位">📍</span></div>
       <div class="tip" onclick="tipTap('${pid}')">「${p.tip.q}」<b>— ${p.tip.by}</b></div>
     </div>${ctx==='loose'?updown:''}</div>`;
 }
@@ -515,7 +533,7 @@ function bundleBlock(b,d,i,tl){
       }else{
         const p=PLACES[s.pid];
         inner+=`<div class="bseg" data-d="${d}" data-it="${i}" data-oi="${s.oi}"><span class="grip">⠿</span><div class="spine" style="width:30px;flex:none"><div class="tarr">${tl&&tl[si]?clk(tl[si].arr):'·'}</div></div>
-          <div class="sbody"><span class="sname"><b>${p.name}</b></span>
+          <div class="sbody"><span class="sname"><b>${p.name}</b><span class="loc" onclick="event.stopPropagation();locate('${s.pid}')" title="地圖定位">📍</span></span>
             <div style="font-size:10px;color:#9a978f;margin-top:1px">${durOv[s.pid]?`<b class="durmod">${durOf(s.pid)}h改</b>`:`${p.durH}h`}</div>
             <div class="tip" onclick="tipTap('${s.pid}')">「${p.tip.q}」<b>— ${p.tip.by}</b></div></div>
           ${sud(si)}<button class="x" onclick="rmSeg(${d},${i},'${s.pid}')">✕</button></div>`;
@@ -605,16 +623,44 @@ function renderPlan(){
   document.getElementById('planlist').innerHTML=h;
 }
 
-let mapInit=false;
+let map=null,mapInit=false;const MARKERS={};let selPid=null;
 function renderMap(){
   if(mapInit||!window.L)return;mapInit=true;
-  const lls=Object.values(PLACES).map(p=>p.ll);
-  const cl=[lls.reduce((a,l)=>a+l[0],0)/lls.length,lls.reduce((a,l)=>a+l[1],0)/lls.length];
-  const map=L.map('libmap',{scrollWheelZoom:false}).setView(cl,9);
+  map=L.map('libmap',{scrollWheelZoom:false});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,
     attribution:'© OpenStreetMap'}).addTo(map);
-  Object.keys(PLACES).forEach(pid=>L.marker(PLACES[pid].ll,{icon:icon(PLACES[pid].name[0])}).addTo(map).bindTooltip(PLACES[pid].name));
+  const b=[];
+  Object.keys(PLACES).forEach(pid=>{
+    const m=L.marker(PLACES[pid].ll,{icon:icon(PLACES[pid].name[0])}).addTo(map).bindTooltip(PLACES[pid].name);
+    m.on('click',()=>{selectPin(pid);focusCard(pid);});
+    MARKERS[pid]=m;b.push(PLACES[pid].ll);
+  });
+  map.fitBounds(b,{padding:[28,28]});
 }
+function selectPin(pid){
+  if(selPid&&MARKERS[selPid])MARKERS[selPid].setIcon(icon(PLACES[selPid].name[0]));
+  selPid=pid;
+  const m=MARKERS[pid];if(!m)return;
+  m.setIcon(icon(PLACES[pid].name[0],true));m.setZIndexOffset(500);m.openTooltip();
+}
+function focusCard(pid){
+  const c=document.querySelector('.place[data-pid="'+pid+'"]');if(!c)return;
+  c.scrollIntoView({behavior:'smooth',block:'center'});
+  c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1400);
+}
+function locate(pid){
+  const p=PLACES[pid];if(!p||!map)return;
+  const z=Math.max(map.getZoom(),14.5);
+  let ll=p.ll;
+  if(window.innerWidth<=900&&document.getElementById('planpanel').classList.contains('open')){
+    const pt=map.project(L.latLng(ll[0],ll[1]),z);
+    pt.x+=map.getSize().x*0.2;
+    const u=map.unproject(pt,z);ll=[u.lat,u.lng];
+  }
+  map.flyTo(ll,z,{duration:.6});
+  selectPin(pid);
+}
+function fitAll(){if(map)map.flyToBounds(Object.values(PLACES).map(p=>p.ll),{padding:[28,28]});}
 function simExtract(){
   const v=document.getElementById('linkin').value;
   toast(v?'提取中…（需後端 /api/extract — pipeline 接駁位已留）':'先貼條 link');
