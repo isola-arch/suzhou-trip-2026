@@ -1,0 +1,72 @@
+{
+  "ok": true,
+  "meta": {
+    "platform": "Xiaohongshu",
+    "type": "video",
+    "title": "手把手教学：破冰/搭讪/吸引贵人实操干货",
+    "uploader": "卡尼酱🍏",
+    "description": "所有社恐必看：和任何人成为朋友的社交指南\n这期视频，卡尼酱邀请到《海岛工位》作者、环球旅居数字游民夏萌人。她7年大厂经历，如今在巴厘岛、清迈、北极圈靠搭讪交到朋友、找到约会对象、认识贵人。\n我想问问她：怎么和陌生人自然搭上话，不尴尬？\n怎么加微信、让对方主动约你？\n如果我不帅、不美，怎么搭讪成功？\n如果你也社恐，或者你曾经想认识某人却不敢开口——这期视频，我相信对你一定有帮助。\n#社会化[话题]# #闲聊[话题]# #smalltalk[话题]# #社交[话题]# #女性成长[话题]# #访谈[话题]# #视频播客[话题]# #数字游民[话题]# @夏萌人",
+    "tags": [
+      "社会化",
+      "闲聊",
+      "smalltalk",
+      "社交",
+      "女性成长",
+      "访谈",
+      "视频播客",
+      "数字游民"
+    ],
+    "like_count": "6878",
+    "collect_count": "6373",
+    "comment_count": "120",
+    "share_count": "508",
+    "url": "https://www.xiaohongshu.com/discovery/item/6ad04ef90000000018028b13?app_platform=ios&app_version=9.49.1&share_from_user_hidden=true&xsec_source=app_share&type=video&xsec_token=CBuQUmww7CCdvz8G1odJGkzeXBbOYSxRekecUdVr1Levo=&author_share=1&xhsshare=CopyLink&shareRedId=ODdHMkZHN0s2NzUyOTgwNjczOTdHOT5C&apptime=1792248574&share_id=0136238fbf204f8b87258c04827703b7"
+  },
+  "images": [
+    "https://sns-webpic-qc.xhscdn.com/202610172258/a3e06562c470d56f204cb1a4aef854b2/1040g008326a0uf085600419o36muhnptmau9ev8!h5_1080jpg"
+  ],
+  "image_note": "CDN image URLs are time-limited — download now if needed",
+  "video": {
+    "url": "https://sns-video-v28.xhscdn.com/stream/1/110/259/01ead04ef9086cf301037003a13df8511b_259.mp4?sign=f763ad1b496c2804750eeb697a746181&t=6ad82a45",
+    "backups": [
+      "https://sns-bak-v11.xhscdn.com/stream/1/110/259/01ead04ef9086cf301037003a13df8511b_259.mp4",
+      "https://sns-bak-v10.xhscdn.com/stream/1/110/259/01ead04ef9086cf301037003a13df8511b_259.mp4"
+    ],
+    "duration_s": 599,
+    "width": 1280,
+    "height": 720,
+    "mb": 70.1
+  },
+  "comments": [
+    {
+      "user": "卡尼酱🍏",
+      "content": "课代表总结：\n1、好的关系，不要带功利性。\n2、交友的第一点，不要讨好型人格，要为对方提供信息增量。\n3、适合搭讪场景：运动，学习小组。\n4、如何发起约会：观察对方在做的事、引导对方约自己、循序渐进混脸熟。\n5、搭讪tips：多问开放性问题。\n6、如何夸奖别人：多从具体细节入手、提前了解对方、在适合场合入手。\n7、如何抢占对方注意力？问题切口要小、让对方做选择题。",
+      "likes": "63",
+      "location": "上海"
+    },
+    {
+      "user": "嗦跌苏捏（Fnds佛尾澳尾合肥版）",
+      "content": "嘶  可能是我个人问题吧，如果有人说他喜欢做什么什么，让我下次一起带他，假如我对这个人没好感或者说我喜欢单独完成这件事，我反而会因为对方说了这句话而反感拒绝。",
+      "likes": "48",
+      "location": "广东"
+    },
+    {
+      "user": "卡尼酱🍏",
+      "content": "夏萌人新书有人要吗🙋🏻",
+      "likes": "4",
+      "location": "上海"
+    },
+    {
+      "user": "栀子",
+      "content": "最近我喜欢找工作，如果下次去找工作，请带我一起[doge]",
+      "likes": "22",
+      "location": "上海"
+    },
+    {
+      "user": "我相信喵喵的瞬间🥕",
+      "content": "一定要出门是吧",
+      "likes": "10",
+      "location": "四川"
+    }
+  ]
+}
