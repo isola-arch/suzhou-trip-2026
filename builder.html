@@ -10,6 +10,7 @@
   *{margin:0;box-sizing:border-box}
   body{background:#0f0f10;color:#e8e6e1;font:14px/1.6 -apple-system,"Segoe UI","Microsoft JhengHei","PingFang TC",sans-serif}
   .leaflet-container{background:#1a1c1e}
+  #libmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) saturate(.7)}
   .leaflet-control-attribution{background:rgba(15,15,16,.7)!important;font-size:9px!important}
   .leaflet-control-attribution a{color:#6a6862!important}
   .topbar{position:sticky;top:0;z-index:800;background:rgba(15,15,16,.95);backdrop-filter:blur(8px);
@@ -597,8 +598,8 @@ function renderMap(){
   const lls=Object.values(PLACES).map(p=>p.ll);
   const cl=[lls.reduce((a,l)=>a+l[0],0)/lls.length,lls.reduce((a,l)=>a+l[1],0)/lls.length];
   const map=L.map('libmap',{scrollWheelZoom:false}).setView(cl,9);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',
-    attribution:'© OSM © CARTO'}).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,
+    attribution:'© OpenStreetMap'}).addTo(map);
   Object.keys(PLACES).forEach(pid=>L.marker(PLACES[pid].ll,{icon:icon(PLACES[pid].name[0])}).addTo(map).bindTooltip(PLACES[pid].name));
 }
 function simExtract(){
